@@ -2,7 +2,7 @@
 name: "🛠️ Chore Request"
 about: 세팅, 빌드, 문서, 인프라 등 기능 외 작업을 기록합니다.
 title: "[CHORE] "
-labels: ["chore"]
+labels: ["CHORE"]
 ---
 
 ## 📌 설명

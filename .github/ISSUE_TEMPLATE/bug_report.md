@@ -2,7 +2,7 @@
 name: "🐞 Bug Report"
 about: 버그 수정 이슈를 기록합니다.
 title: "[BUG] "
-labels: ["bug"]
+labels: ["BUG"]
 ---
 
 ## 📌 버그 설명
