@@ -18,3 +18,6 @@ AI를 활용한 개인화 학습과 게이미피케이션 요소를 통해, 뉴�
 - **Monitoring / Logging**: Sentry
 - **Testing / QA**: k6
 - **External Services**: Spring Batch, DBdocs, DBDiagram
+
+---
+## Repository Structure
