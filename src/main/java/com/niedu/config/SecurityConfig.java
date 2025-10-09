@@ -42,7 +42,8 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
                 "http://localhost:3000",
-                "https://niedu.store" // 프론트엔드 vercel 추가 필요
+                "https://niedu-service.com",
+                "https://api.niedu-service.com"
         ));
         config.setAllowCredentials(true);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -65,13 +66,11 @@ public class SecurityConfig {
                                 "/login",
                                 "/oauth2/authorization/**",
                                 "/login/oauth2/code/**",
-                                "/reissue/access-token",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
-                                "/webjars/**",
-                                "/api/**"
+                                "/webjars/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
