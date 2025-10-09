@@ -1,7 +1,9 @@
 package com.niedu.config;
 
-import com.niedu.security.JwtAuthenticationFilter;
-import com.niedu.security.JwtUtil;
+import com.niedu.security.jwt.JwtAuthenticationFilter;
+import com.niedu.security.jwt.JwtUtil;
+import com.niedu.security.oauth.OAuthLoginFailureHandler;
+import com.niedu.security.oauth.OAuthLoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +19,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -25,6 +32,28 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final OAuthLoginSuccessHandler oAuthLoginSuccessHandler;
+    private final OAuthLoginFailureHandler oAuthLoginFailureHandler;
+
+    @Bean
+    public CorsFilter corsFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "https://niedu-service.com",
+                "https://api.niedu-service.com"
+        ));
+        config.setAllowCredentials(true);
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Set-Cookie"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -32,20 +61,25 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Swagger 관련 허용
                         .requestMatchers(
+                                "/health",
+                                "/login",
+                                "/oauth2/authorization/**",
+                                "/login/oauth2/code/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
-                        // /api/** 도 모두 허용
-                        .requestMatchers("/api/**").permitAll()
-                        // 나머지는 인증 필요
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class)
+                .oauth2Login(oauth -> oauth
+                        .successHandler(oAuthLoginSuccessHandler)
+                        .failureHandler(oAuthLoginFailureHandler)
+                )
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService),
+                        UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

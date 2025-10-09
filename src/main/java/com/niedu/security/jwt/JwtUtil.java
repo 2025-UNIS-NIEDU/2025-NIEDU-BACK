@@ -1,9 +1,10 @@
-package com.niedu.security;
+package com.niedu.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +15,15 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    private static final String SECRET_KEY = "YOUR_SECRET_KEY_32BYTES_MINIMUM_LENGTH_PLEASE!";
+
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
+
+    @Value("${jwt.access-token.expiration-time}")
+    private long ACCESS_TOKEN_EXPIRATION_TIME;
+
+    @Value("${jwt.refresh-token.expiration-time}")
+    private long REFRESH_TOKEN_EXPIRATION_TIME;
 
     private Key getSignKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
@@ -50,12 +59,22 @@ public class JwtUtil {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    public String generateToken(String username) {
-        long expirationTime = 1000 * 60 * 60; // 1시간
+    public String generateAccessToken(Long userId) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(String.valueOf(userId))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME))
+                .claim("type", "access")
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(Long userId) {
+        return Jwts.builder()
+                .setSubject(String.valueOf(userId))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME))
+                .claim("type", "refresh")
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
