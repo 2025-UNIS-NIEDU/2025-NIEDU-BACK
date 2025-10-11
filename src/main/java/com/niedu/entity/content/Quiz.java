@@ -5,24 +5,16 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-enum QuizType {
-    OX, MCQ, FILL_IN_THE_BLANK
-}
-
 @Entity
 @Table(name = "quizzes")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Quiz {
-
+    // ... 기존 id, question, feedback 등 필드 ...
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "quiz_id")
     private Long id;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "quiz_type", nullable = false)
-    private QuizType quizType;
 
     @Lob
     @Column(nullable = false)
@@ -30,4 +22,7 @@ public class Quiz {
 
     @Lob
     private String feedback;
+
+    @Lob
+    private String answer;
 }

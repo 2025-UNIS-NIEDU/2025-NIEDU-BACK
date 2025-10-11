@@ -1,9 +1,7 @@
 package com.niedu.entity.content;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "terms")
@@ -22,4 +20,11 @@ public class Term {
     @Lob
     @Column(nullable = false)
     private String description;
+
+    @Column(name = "article_context", length = 500)
+    private String articleContext;
+
+    @Lob
+    @Column(name = "additional_explanation")
+    private String additionalExplanation;
 }
