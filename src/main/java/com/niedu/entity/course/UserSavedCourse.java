@@ -11,7 +11,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-class FavoriteCourseId implements Serializable {
+class UserSavedCourseId implements Serializable {
     @Column(name = "user_id")
     private Long userId;
 
@@ -20,13 +20,13 @@ class FavoriteCourseId implements Serializable {
 }
 
 @Entity
-@Table(name = "favorite_courses")
+@Table(name = "user_saved_courses")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class FavoriteCourse {
+public class UserSavedCourse {
 
     @EmbeddedId
-    private FavoriteCourseId id;
+    private UserSavedCourseId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
@@ -38,8 +38,8 @@ public class FavoriteCourse {
     @JoinColumn(name = "course_id")
     private Course course;
 
-    public FavoriteCourse(User user, Course course) {
-        this.id = new FavoriteCourseId(user.getId(), course.getId());
+    public UserSavedCourse(User user, Course course) {
+        this.id = new UserSavedCourseId(user.getId(), course.getId());
         this.user = user;
         this.course = course;
     }
