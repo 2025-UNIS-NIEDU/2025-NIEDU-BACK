@@ -1,7 +1,7 @@
 package com.niedu.controller.auth;
 
 import com.niedu.entity.user.RefreshToken;
-import com.niedu.repository.RefreshTokenRepository;
+import com.niedu.repository.user.RefreshTokenRepository;
 import com.niedu.security.jwt.JwtUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

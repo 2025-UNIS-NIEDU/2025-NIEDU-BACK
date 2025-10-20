@@ -1,4 +1,4 @@
-package com.niedu.repository;
+package com.niedu.repository.user;
 
 import com.niedu.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,7 +1,7 @@
 package com.niedu.security.service;
 
 import com.niedu.entity.user.User;
-import com.niedu.repository.UserRepository;
+import com.niedu.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

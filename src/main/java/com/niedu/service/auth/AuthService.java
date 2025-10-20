@@ -1,7 +1,7 @@
 package com.niedu.service.auth;
 
 import com.niedu.entity.user.User;
-import com.niedu.repository.UserRepository;
+import com.niedu.repository.user.UserRepository;
 import com.niedu.security.jwt.JwtUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
