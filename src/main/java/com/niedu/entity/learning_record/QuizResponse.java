@@ -1,27 +1,24 @@
-package com.niedu.entity.learning;
+package com.niedu.entity.learning_record;
 
 import com.niedu.entity.user.User;
-import com.niedu.entity.content.Quiz;
+import com.niedu.entity.content.quiz.Quiz;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 enum QuizAnswerStatus {
-    UNANSWERED, // 미응답
-    CORRECT,    // 정답
-    INCORRECT   // 오답
+    UNANSWERED,
+    CORRECT,
+    INCORRECT
 }
 
 @Entity
-@Table(name = "user_quiz_responses")
+@Table(name = "quiz_responses")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserQuizResponse {
+public class QuizResponse {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "response_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,16 +34,7 @@ public class UserQuizResponse {
     @Column(nullable = false)
     private QuizAnswerStatus status;
 
-    @Setter
-    @Column(name = "submitted_answer", nullable = true)
-    private String submittedAnswer;
-
-    @Setter
-    @Column(name = "submitted_at", nullable = true)
-    private LocalDateTime submittedAt;
-
-
-    public UserQuizResponse(User user, Quiz quiz) {
+    public QuizResponse(User user, Quiz quiz) {
         this.user = user;
         this.quiz = quiz;
         this.status = QuizAnswerStatus.UNANSWERED;

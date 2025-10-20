@@ -1,8 +1,8 @@
 package com.niedu.entity.user;
 
-import com.niedu.entity.user.UserStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder; // Builder를 사용하기 위해 import 합니다.
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
@@ -49,7 +49,7 @@ public class User {
     private boolean pushEnabledEvening;
 
     @Column(name = "attendance_streak", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private Integer attendanceStreak;
+    private int attendanceStreak;
 
     @Column(name = "last_attended_date")
     private LocalDate lastAttendedDate;
@@ -65,6 +65,14 @@ public class User {
 
     @Column(name = "withdrawn_at")
     private LocalDateTime withdrawnAt;
+
+    @Builder
+    public User(String kakaoId, String nickname, String email, String profileImageUrl) {
+        this.kakaoId = kakaoId;
+        this.nickname = nickname;
+        this.email = email;
+        this.profileImageUrl = profileImageUrl;
+    }
 
     @PrePersist
     protected void onCreate() {

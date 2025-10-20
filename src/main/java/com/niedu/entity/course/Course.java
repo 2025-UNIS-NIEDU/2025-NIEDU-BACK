@@ -1,6 +1,5 @@
 package com.niedu.entity.course;
 
-import com.niedu.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,15 +20,15 @@ public class Course {
     @Column(nullable = false)
     private String title;
 
+    @Column(name = "short_description", length = 500)
+    private String shortDescription;
+
     @Lob
-    private String description;
+    @Column(name = "long_description")
+    private String longDescription;
 
     @Column(name = "thumbnail_url", length = 2048)
     private String thumbnailUrl;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creator_id")
-    private User creator;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -1,9 +1,9 @@
-package com.niedu.entity.course;
+package com.niedu.entity.learning_record;
 
 import com.niedu.entity.user.User;
+import com.niedu.entity.course.Course;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.io.Serializable;
 
 @Embeddable
@@ -11,22 +11,21 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-class UserSavedCourseId implements Serializable {
+class SavedCourseId implements Serializable {
     @Column(name = "user_id")
     private Long userId;
-
     @Column(name = "course_id")
     private Long courseId;
 }
 
 @Entity
-@Table(name = "user_saved_courses")
+@Table(name = "saved_courses")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserSavedCourse {
+public class SavedCourse {
 
     @EmbeddedId
-    private UserSavedCourseId id;
+    private SavedCourseId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
@@ -38,8 +37,8 @@ public class UserSavedCourse {
     @JoinColumn(name = "course_id")
     private Course course;
 
-    public UserSavedCourse(User user, Course course) {
-        this.id = new UserSavedCourseId(user.getId(), course.getId());
+    public SavedCourse(User user, Course course) {
+        this.id = new SavedCourseId(user.getId(), course.getId());
         this.user = user;
         this.course = course;
     }
