@@ -1,5 +1,6 @@
 package com.niedu.entity.content;
 
+import com.niedu.entity.course.Session;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,6 +17,10 @@ public class Term {
 
     @Column(nullable = false, unique = true, length = 100)
     private String name;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "session_id", nullable = false)
+    private Session session;
 
     @Lob
     @Column(nullable = false)

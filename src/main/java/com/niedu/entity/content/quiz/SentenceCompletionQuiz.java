@@ -11,4 +11,6 @@ import lombok.Setter;
 @Entity
 @DiscriminatorValue("COMPLETION")
 public class SentenceCompletionQuiz extends Quiz {
+    @Column(nullable = false)
+    private Integer questionIndex;  // 1, 2, 3 중 하나
 }
