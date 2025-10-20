@@ -1,23 +1,19 @@
-package com.niedu.entity.content;
+package com.niedu.entity.learning_record;
 
 import com.niedu.entity.user.User;
 import com.niedu.entity.content.Term;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_saved_terms")
+@Table(name = "saved_terms")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserSavedTerm {
+public class SavedTerm {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "saved_term_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,7 +27,7 @@ public class UserSavedTerm {
     @Column(name = "saved_at", nullable = false, updatable = false)
     private LocalDateTime savedAt;
 
-    public UserSavedTerm(User user, Term term) {
+    public SavedTerm(User user, Term term) {
         this.user = user;
         this.term = term;
     }

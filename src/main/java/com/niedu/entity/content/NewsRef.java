@@ -16,14 +16,16 @@ public class NewsRef {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "news_ref_id")
-    private Long id; // DB 내부에서 사용할 고유 ID
+    private Long id;
 
-    // RAG DB의 뉴스 원본을 가리키는 고유 식별자
     @Column(name = "rag_uuid", unique = true, nullable = false)
     private String ragUuid;
 
     @Column(nullable = false)
-    private String title;
+    private String headline;
+
+    @Column
+    private String publisher;
 
     @Column
     private String topic;

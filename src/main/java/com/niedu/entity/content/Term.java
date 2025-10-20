@@ -19,12 +19,13 @@ public class Term {
 
     @Lob
     @Column(nullable = false)
-    private String description;
+    private String definition;
 
-    @Column(name = "article_context", length = 500)
-    private String articleContext;
+    @Column(name = "example_sentence", length = 500)
+    private String exampleSentence;
 
     @Lob
     @Column(name = "additional_explanation")
     private String additionalExplanation;
+
 }
