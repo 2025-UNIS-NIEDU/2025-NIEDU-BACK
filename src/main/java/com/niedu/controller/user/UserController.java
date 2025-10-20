@@ -1,10 +1,10 @@
-package com.niedu.controller;
+package com.niedu.controller.user;
 
 import com.niedu.dto.user.UserInfoResponse;
 import com.niedu.entity.user.User;
 import com.niedu.global.response.ApiResponse;
-import com.niedu.service.AuthService;
-import com.niedu.service.UserService;
+import com.niedu.service.auth.AuthService;
+import com.niedu.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -1,4 +1,4 @@
-package com.niedu.service;
+package com.niedu.service.auth;
 
 import com.niedu.entity.user.User;
 import com.niedu.repository.UserRepository;

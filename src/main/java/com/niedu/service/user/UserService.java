@@ -1,4 +1,4 @@
-package com.niedu.service;
+package com.niedu.service.user;
 
 import com.niedu.dto.user.UserInfoResponse;
 import com.niedu.entity.user.User;

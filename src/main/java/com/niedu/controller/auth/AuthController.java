@@ -1,4 +1,4 @@
-package com.niedu.controller;
+package com.niedu.controller.auth;
 
 import com.niedu.entity.user.RefreshToken;
 import com.niedu.repository.RefreshTokenRepository;
