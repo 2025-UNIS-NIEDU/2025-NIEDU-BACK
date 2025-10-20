@@ -28,9 +28,5 @@ public class Step {
     // 이 단계의 유형 (요약 읽기, OX 퀴즈 등)
     @Enumerated(EnumType.STRING)
     @Column(name = "step_type", nullable = false)
-    private Level type;
-
-    // 이 단계에서 사용할 콘텐츠의 ID (e.g., Quiz ID, Term ID 등)
-    @Column(name = "content_id", nullable = false)
-    private Long contentId;
+    private StepType type;
 }

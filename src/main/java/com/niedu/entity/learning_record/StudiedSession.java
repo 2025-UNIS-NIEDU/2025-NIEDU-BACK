@@ -4,6 +4,8 @@ import com.niedu.entity.user.User;
 import com.niedu.entity.course.Session;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,6 +33,6 @@ public class StudiedSession {
     @Column(nullable = false)
     private SessionStatus status;
 
-    @Column(name = "studied_at")
-    private LocalDateTime studiedAt;
+    @Column(name = "studied_Time")
+    private Duration studiedTime;
 }
