@@ -25,17 +25,20 @@ public class CourseController {
     public ResponseEntity<ApiResponse<?>> getCourses(HttpServletRequest httpServletRequest,
                                                      @RequestParam("type") String type,
                                                      @RequestParam("view") String view,
-                                                     @RequestParam(value = "topic", required = false) String topic) {
+                                                     @RequestParam(value = "topic", required = false) String topic,
+                                                     @RequestParam(defaultValue = "0", required = false) Integer page) {
         User user = authService.getUserFromRequest(httpServletRequest);
-        ArrayList<CourseListResponse> responses = courseService.getCourses(user, type, view, topic);
+        ArrayList<CourseListResponse> responses = courseService.getCourses(user, type, view, topic, page);
         return (responses != null)?
                 ResponseEntity.ok(ApiResponse.success(responses)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "코스 목록 조회에 실패했습니다."));
     }
 
     @GetMapping("/{courseId}")
-    public ResponseEntity<ApiResponse<?>> getCourse(@PathVariable("courseId") Long courseId) {
-        CourseResponse response = courseService.getCourse(courseId);
+    public ResponseEntity<ApiResponse<?>> getCourse(HttpServletRequest httpServletRequest,
+                                                    @PathVariable("courseId") Long courseId) {
+        User user = authService.getUserFromRequest(httpServletRequest);
+        CourseResponse response = courseService.getCourse(user, courseId);
         return (response != null)?
                 ResponseEntity.ok(ApiResponse.success(response)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "코스 조회에 실패했습니다."));
