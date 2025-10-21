@@ -1,4 +1,4 @@
 package com.niedu.dto.course.content;
 
-public interface ContentDto {
+public interface ContentResponse {
 }
