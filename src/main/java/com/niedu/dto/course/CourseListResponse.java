@@ -4,5 +4,6 @@ public record CourseListResponse (
     String title,
     String thumbnailUrl,
     String longDescription,
-    String topic
+    String topic,
+    String subTopic
 ) {}
