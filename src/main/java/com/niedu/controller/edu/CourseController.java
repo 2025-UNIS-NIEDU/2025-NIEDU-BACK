@@ -21,12 +21,13 @@ public class CourseController {
     private final CourseService courseService;
     private final AuthService authService;
 
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<ApiResponse<?>> getCourses(HttpServletRequest httpServletRequest,
+                                                     @RequestParam("type") String type,
                                                      @RequestParam("view") String view,
-                                                     @RequestParam("topic") String topic) {
+                                                     @RequestParam(value = "topic", required = false) String topic) {
         User user = authService.getUserFromRequest(httpServletRequest);
-        ArrayList<CourseListResponse> responses = courseService.getCourses(user, view, topic);
+        ArrayList<CourseListResponse> responses = courseService.getCourses(user, type, view, topic);
         return (responses != null)?
                 ResponseEntity.ok(ApiResponse.success(responses)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "코스 목록 조회에 실패했습니다."));
