@@ -1,19 +1,19 @@
 package com.niedu.entity.learning_record;
 
+import com.niedu.entity.course.Course;
 import com.niedu.entity.user.User;
-import com.niedu.entity.course.Session;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "studied_sessions")
+@Table(name = "studied_courses")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class StudiedSession {
-
+public class StudiedCourse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,16 +23,9 @@ public class StudiedSession {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id", nullable = false)
-    private Session session;
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
 
     @Column(nullable = false)
     private Float progress;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SessionStatus status;
-
-    @Column(name = "studied_Time")
-    private Duration studiedTime;
 }

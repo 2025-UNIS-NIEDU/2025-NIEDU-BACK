@@ -38,6 +38,9 @@ public class Course {
     @JoinColumn(name = "topic_id", nullable = false)
     private Topic topic;
 
+    @Column(name = "view_count", nullable = false)
+    private Long viewCount = 0L;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
