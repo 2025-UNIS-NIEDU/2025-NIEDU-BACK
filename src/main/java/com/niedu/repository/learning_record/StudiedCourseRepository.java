@@ -1,4 +1,4 @@
-package com.niedu.repository.course;
+package com.niedu.repository.learning_record;
 
 import com.niedu.entity.learning_record.StudiedCourse;
 import org.springframework.data.jpa.repository.JpaRepository;
