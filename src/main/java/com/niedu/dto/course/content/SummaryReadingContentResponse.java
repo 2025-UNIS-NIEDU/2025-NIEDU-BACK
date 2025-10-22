@@ -4,5 +4,5 @@ import java.util.ArrayList;
 
 public record SummaryReadingContentResponse (
         String summary,
-        ArrayList<SummaryReadingContentResponse> keywords
+        ArrayList<KeywordContent> keywords
 ) implements ContentResponse {}
