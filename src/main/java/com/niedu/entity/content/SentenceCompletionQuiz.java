@@ -1,4 +1,4 @@
-package com.niedu.entity.content.quiz;
+package com.niedu.entity.content;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -9,13 +9,11 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@DiscriminatorValue("SHORT")
-public class ShortAnswerQuiz extends Quiz {
+@DiscriminatorValue("COMPLETION")
+public class SentenceCompletionQuiz extends Content {
+    @Column(nullable = false)
+    private String question;
 
     @Column(nullable = false)
-    private String correctAnswer;
-
-    @Lob
-    @Column(nullable = false)
-    private String answerExplanation;
+    private Integer questionIndex;  // 1, 2, 3 중 하나
 }

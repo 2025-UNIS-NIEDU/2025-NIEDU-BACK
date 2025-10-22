@@ -1,4 +1,4 @@
-package com.niedu.entity.content.quiz;
+package com.niedu.entity.content;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -10,7 +10,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @DiscriminatorValue("MULTI")
-public class MultipleChoiceQuiz extends Quiz {
+public class MultipleChoiceQuiz extends Content {
+    @Column(nullable = false)
+    private String question;
 
     @Column(nullable = false)
     private String correctAnswer;
