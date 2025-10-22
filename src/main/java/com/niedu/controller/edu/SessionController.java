@@ -1,7 +1,7 @@
 package com.niedu.controller.edu;
 
 import com.niedu.dto.course.LevelRequest;
-import com.niedu.dto.course.SessionResponse;
+import com.niedu.dto.course.SessionListResponse;
 import com.niedu.dto.course.SessionStartResponse;
 import com.niedu.dto.course.SessionSummaryResponse;
 import com.niedu.entity.user.User;
@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+
 @RestController
 @RequestMapping("/api/edu/courses/{courseId}/sessions")
 @RequiredArgsConstructor
@@ -23,9 +25,9 @@ public class SessionController {
 
     @GetMapping("")
     public ResponseEntity<ApiResponse<?>> getSessions(@PathVariable("courseId") Long courseId) {
-        SessionResponse response = sessionService.getSessions(courseId);
-        return (response != null)?
-                ResponseEntity.ok(ApiResponse.success(response)):
+        ArrayList<SessionListResponse> responses = sessionService.getSessions(courseId);
+        return (responses != null)?
+                ResponseEntity.ok(ApiResponse.success(responses)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "세션 목록 조회에 실패했습니다."));
     }
 

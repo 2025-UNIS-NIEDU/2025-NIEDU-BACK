@@ -1,9 +1,9 @@
 package com.niedu.controller.edu;
 
 import com.niedu.dto.course.*;
+import com.niedu.dto.course.user_answer.AnswerResponse;
 import com.niedu.entity.admin.AIErrorReport;
 import com.niedu.entity.learning_record.SharedResponse;
-import com.niedu.entity.learning_record.quiz_response.QuizResponse;
 import com.niedu.entity.user.User;
 import com.niedu.global.response.ApiResponse;
 import com.niedu.service.auth.AuthService;
@@ -30,8 +30,8 @@ public class StepController {
                                                            @PathVariable("stepId") Long stepId,
                                                            @RequestBody StepAnswerRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);
-        QuizResponse quizResponse = stepService.submitStepAnswer(user, courseId, sessionId, request);
-        return (quizResponse != null)?
+        AnswerResponse answerResponse = stepService.submitStepAnswer(user, courseId, sessionId, request);
+        return (answerResponse != null)?
                 ResponseEntity.ok(ApiResponse.success(null)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "답변 저장에 실패했습니다."));
     }
