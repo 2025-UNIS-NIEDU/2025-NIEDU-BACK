@@ -1,5 +1,6 @@
 package com.niedu.entity.course;
 
+import com.niedu.entity.content.Content;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -29,4 +30,8 @@ public class Step {
     @Enumerated(EnumType.STRING)
     @Column(name = "step_type", nullable = false)
     private StepType type;
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "content_id")
+    private Content content;
 }

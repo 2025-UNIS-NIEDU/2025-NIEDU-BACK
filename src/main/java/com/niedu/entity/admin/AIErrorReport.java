@@ -3,7 +3,6 @@ package com.niedu.entity.admin;
 import com.niedu.entity.course.Course;
 import com.niedu.entity.course.Session;
 import com.niedu.entity.course.Step;
-import com.niedu.entity.learning_record.quiz_response.SentenceCompletionQuizResponse;
 import jakarta.persistence.*;
 
 @Entity
@@ -25,8 +24,4 @@ public class AIErrorReport {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "step_id", nullable = false)
     private Step step;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id", nullable = false)
-    SentenceCompletionQuizResponse sentenceCompletionQuizResponse;
 }
