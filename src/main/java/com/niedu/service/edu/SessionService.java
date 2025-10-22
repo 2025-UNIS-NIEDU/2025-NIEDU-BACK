@@ -83,7 +83,7 @@ public class SessionService {
                                 studiedStep.getIsCompleted(),
                                 step.getType(),
                                 stepMapperService.toResponse(step),
-                                userAnswerMapperService.toResponse(step)
+                                userAnswerMapperService.toResponse(studiedStep)
                         );
                     })
                     .collect(Collectors.toCollection(ArrayList::new));
@@ -111,7 +111,7 @@ public class SessionService {
                                 studiedStep.getIsCompleted(),
                                 step.getType(),
                                 stepMapperService.toResponse(step),
-                                userAnswerMapperService.toResponse(step)
+                                userAnswerMapperService.toResponse(studiedStep)
                         );
                     })
                     .collect(Collectors.toCollection(ArrayList::new));
