@@ -30,7 +30,7 @@ public class StepController {
                                                            @PathVariable("stepId") Long stepId,
                                                            @RequestBody StepAnswerRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);
-        AnswerResponse answerResponse = stepService.submitStepAnswer(user, courseId, sessionId, request);
+        AnswerResponse answerResponse = stepService.submitStepAnswer(user, stepId, request);
         return (answerResponse != null)?
                 ResponseEntity.ok(ApiResponse.success(null)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "답변 저장에 실패했습니다."));
@@ -43,7 +43,7 @@ public class StepController {
                                                         @PathVariable("stepId") Long stepId,
                                                         ShareAnswerRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);
-        SharedResponse sharedResponse = stepService.shareMyAnswer(user, courseId, sessionId, stepId);
+        SharedResponse sharedResponse = stepService.shareMyAnswer(user, stepId, request);
         return (sharedResponse != null)?
                 ResponseEntity.ok(ApiResponse.success(null)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "답변 저장에 실패했습니다."));
@@ -55,7 +55,7 @@ public class StepController {
                                                            @PathVariable("sessionId") Long sessionId,
                                                            @PathVariable("stepId") Long stepId) {
         User user = authService.getUserFromRequest(httpServletRequest);
-        ArrayList<String> responses = stepService.getSharedAnswers(user, courseId, sessionId, stepId);
+        ArrayList<String> responses = stepService.getSharedAnswers(user, stepId);
         return (responses != null)?
                 ResponseEntity.ok(ApiResponse.success(responses)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "공유된 답변 조회에 실패했습니다."));
@@ -68,7 +68,7 @@ public class StepController {
                                                                       @PathVariable("stepId") Long stepId,
                                                                       @RequestBody FeedbackAnswerRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);
-        FeedbackAnswerResponse response = stepService.submitStepAnswerForFeedback(user, courseId, sessionId, stepId, request);
+        FeedbackAnswerResponse response = stepService.submitStepAnswerForFeedback(user, stepId, request);
         return (response != null)?
                 ResponseEntity.ok(ApiResponse.success(response)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "AI 피드백 불러오기에 실패했습니다."));
@@ -81,7 +81,7 @@ public class StepController {
                                                                 @PathVariable("stepId") Long stepId,
                                                                 @RequestBody ReportFeedbackRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);
-        AIErrorReport aiErrorReport = stepService.reportErrorInFeedback(user, courseId, sessionId, stepId, request);
+        AIErrorReport aiErrorReport = stepService.reportErrorInFeedback(user, stepId, request);
         return (aiErrorReport != null)?
                 ResponseEntity.ok(ApiResponse.success(null)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "AI 에러 제보에 실패했습니다."));
