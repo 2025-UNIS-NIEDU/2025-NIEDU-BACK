@@ -8,6 +8,7 @@ import lombok.*;
 @Entity
 @Table(name = "studied_steps")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder

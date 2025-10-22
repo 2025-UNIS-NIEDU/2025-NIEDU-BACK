@@ -4,9 +4,13 @@ import com.niedu.entity.course.Course;
 import com.niedu.entity.course.Session;
 import com.niedu.entity.course.Step;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "ai_error_report")
+@NoArgsConstructor
+@AllArgsConstructor
 public class AIErrorReport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,14 +18,9 @@ public class AIErrorReport {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false)
-    private Course course;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id", nullable = false)
-    private Session session;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "step_id", nullable = false)
     private Step step;
+
+    @Column(nullable = false)
+    private Integer questionNum;
 }
