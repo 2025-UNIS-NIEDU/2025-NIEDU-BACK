@@ -17,4 +17,6 @@ public interface StudiedStepRepository extends JpaRepository<StudiedStep, Long> 
     );
 
     StudiedStep findFirstByUserAndStep_Session_Id(User user, Long sessionId);
+
+    StudiedStep findByUserIdAndStepId(Long userId, Long stepId);
 }
