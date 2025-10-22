@@ -1,10 +1,10 @@
 package com.niedu.dto.course;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
-public record SessionResponse (
+public record SessionListResponse(
         String thumbnailUrl,
         String headline,
         String publisher,
-        LocalDateTime publishedAt
+        LocalDate publishedAt
 ) {}
