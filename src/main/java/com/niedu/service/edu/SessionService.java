@@ -6,13 +6,11 @@ import com.niedu.entity.course.Step;
 import com.niedu.entity.learning_record.SessionStatus;
 import com.niedu.entity.learning_record.StudiedSession;
 import com.niedu.entity.learning_record.StudiedStep;
-import com.niedu.entity.user.AttendanceLog;
 import com.niedu.entity.user.User;
 import com.niedu.repository.course.SessionRepository;
 import com.niedu.repository.course.StepRepository;
 import com.niedu.repository.learning_record.StudiedSessionRepository;
 import com.niedu.repository.learning_record.StudiedStepRepository;
-import com.niedu.repository.user.AttendanceLogRepository;
 import com.niedu.service.edu.content.StepMapperService;
 import com.niedu.service.edu.user_answer.UserAnswerMapperService;
 import com.niedu.service.user.AttendanceService;
@@ -35,7 +33,6 @@ public class SessionService {
     private final StudiedSessionRepository studiedSessionRepository;
     private final StepRepository stepRepository;
     private final StudiedStepRepository studiedStepRepository;
-    private final AttendanceLogRepository attendanceLogRepository;
 
     public ArrayList<SessionListResponse> getSessions(Long courseId) {
         List<Session> sessions = sessionRepository.findAllByCourse_Id(courseId);
@@ -83,7 +80,8 @@ public class SessionService {
                                 studiedStep.getIsCompleted(),
                                 step.getType(),
                                 stepMapperService.toResponse(step),
-                                userAnswerMapperService.toResponse(studiedStep)
+                                userAnswerMapperService.toResponse(studiedStep), // 없으면 null
+                                userAnswerMapperService.checkIsCorrect(studiedStep) // 없으면 null
                         );
                     })
                     .collect(Collectors.toCollection(ArrayList::new));
@@ -111,7 +109,8 @@ public class SessionService {
                                 studiedStep.getIsCompleted(),
                                 step.getType(),
                                 stepMapperService.toResponse(step),
-                                userAnswerMapperService.toResponse(studiedStep)
+                                userAnswerMapperService.toResponse(studiedStep), // 없으면 null
+                                userAnswerMapperService.checkIsCorrect(studiedStep)  // 없으면 null
                         );
                     })
                     .collect(Collectors.toCollection(ArrayList::new));

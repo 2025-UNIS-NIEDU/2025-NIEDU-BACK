@@ -10,5 +10,6 @@ public record StepListResponse (
         Boolean isCompleted,
         StepType contentType,
         ContentResponse contentResponse,
-        AnswerResponse userAnswerResponse
+        AnswerResponse userAnswerResponse,
+        Boolean isCorrect
 ) {}

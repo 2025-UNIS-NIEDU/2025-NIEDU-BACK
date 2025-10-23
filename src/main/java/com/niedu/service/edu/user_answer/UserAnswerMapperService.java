@@ -25,6 +25,7 @@ public class UserAnswerMapperService {
 
     public AnswerResponse toResponse(StudiedStep studiedStep) {
         UserAnswer userAnswer = userAnswerRepository.findByStudiedStep(studiedStep);
+        if (userAnswer == null) return null;
         return strategies.stream()
                 .filter(strategy -> strategy.supports(studiedStep.getStep().getType()))
                 .findFirst()
@@ -60,7 +61,12 @@ public class UserAnswerMapperService {
         return userAnswerRepository.save(result);
     }
 
-    public boolean checkIsCorrect(StudiedStep studiedStep, AnswerResponse userAnswerRequest) {
+    public Boolean checkIsCorrect(StudiedStep studiedStep) {
+        UserAnswer userAnswer = userAnswerRepository.findByStudiedStep(studiedStep);
+        if (userAnswer == null) return null;
+
+        AnswerResponse userAnswerRequest = toResponse(studiedStep);
+        if (userAnswerRequest == null) return false;
         StepType stepType = studiedStep.getStep().getType();
 
         return strategies.stream()
