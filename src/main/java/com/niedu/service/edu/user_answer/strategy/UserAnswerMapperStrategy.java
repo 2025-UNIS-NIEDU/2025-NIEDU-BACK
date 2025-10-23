@@ -9,7 +9,11 @@ import com.niedu.entity.user.User;
 
 public interface UserAnswerMapperStrategy {
     boolean supports(StepType type);
-    AnswerResponse toResponse(StudiedStep studiedStep);
+    AnswerResponse toResponse(UserAnswer userAnswer);
 
-    UserAnswer toEntity(User user, Step step, AnswerResponse request);
+    UserAnswer toEntity(StudiedStep studiedStep, AnswerResponse userAnswerRequest);
+
+    void updateEntity(UserAnswer existingUserAnswer, AnswerResponse userAnswerRequest);
+
+    boolean checkIsCorrect(StudiedStep studiedStep, AnswerResponse userAnswerRequest);
 }
