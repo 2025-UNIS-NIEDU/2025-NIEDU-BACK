@@ -1,8 +1,8 @@
 package com.niedu.dto.course.content;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public record SummaryReadingContentResponse (
         String summary,
-        ArrayList<KeywordContent> keywords
+        List<KeywordContent> keywords
 ) implements ContentResponse {}

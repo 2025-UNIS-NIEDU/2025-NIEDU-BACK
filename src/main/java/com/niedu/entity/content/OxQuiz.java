@@ -15,7 +15,7 @@ public class OxQuiz extends Content {
     private String question;
 
     @Column(nullable = false)
-    private boolean correctAnswer;
+    private String correctAnswer;
 
     @Lob
     @Column(nullable = false)

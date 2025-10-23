@@ -1,11 +1,11 @@
 package com.niedu.dto.course.content;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public record ArticleReadingContentResponse (
         String thumbnailUrl,
         String headline,
         String publisher,
-        LocalDateTime publishedAt,
+        LocalDate publishedAt,
         String sourceUrl
 ) implements ContentResponse {}
