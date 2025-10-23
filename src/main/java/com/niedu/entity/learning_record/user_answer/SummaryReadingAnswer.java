@@ -1,13 +1,10 @@
 package com.niedu.entity.learning_record.user_answer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.niedu.dto.course.content.KeywordContent;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +14,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @DiscriminatorValue("SUMMARY")
+@SuperBuilder
 public class SummaryReadingAnswer extends UserAnswer {
     @ElementCollection
     @CollectionTable(
