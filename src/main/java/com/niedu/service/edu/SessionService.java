@@ -98,7 +98,7 @@ public class SessionService {
             sessionLog.setStartTime(LocalDateTime.now());
             StudiedSession savedStudiedSession = studiedSessionRepository.save(sessionLog);
             // 2. StudiedStep 불러오기
-            List<StudiedStep> studiedSteps = studiedStepRepository.findAllByUser_IdAndSession_Id(user.getId(), sessionId);
+            List<StudiedStep> studiedSteps = studiedStepRepository.findAllByUser_IdAndStep_Session_Id(user.getId(), sessionId);
             // 3. steps 세팅
             ArrayList<StepListResponse> stepListResponses = studiedSteps.stream()
                     .map(studiedStep -> {
@@ -130,7 +130,7 @@ public class SessionService {
     public void quitSession(User user, Long sessionId) {
         // 1. 진행률 확인
         StudiedSession studiedSession = studiedSessionRepository.findByUser_IdAndSession_Id(user.getId(), sessionId);
-        List<StudiedStep> studiedSteps = studiedStepRepository.findAllByUser_IdAndSession_Id(user.getId(), sessionId);
+        List<StudiedStep> studiedSteps = studiedStepRepository.findAllByUser_IdAndStep_Session_Id(user.getId(), sessionId);
         long completedCount = studiedSteps.stream()
                 .filter(StudiedStep::getIsCompleted)
                 .count();

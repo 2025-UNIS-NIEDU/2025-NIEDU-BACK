@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface StudiedStepRepository extends JpaRepository<StudiedStep, Long> {
-    List<StudiedStep> findAllByUser_IdAndSession_Id(Long id, Long sessionId);
+    List<StudiedStep> findAllByUser_IdAndStep_Session_Id(Long id, Long sessionId);
 
     Optional<StudiedStep> findFirstByUserAndStep_Session_IdAndIsCompletedFalseOrderByStep_IdAsc(
             User user, Long sessionId
@@ -18,5 +18,5 @@ public interface StudiedStepRepository extends JpaRepository<StudiedStep, Long> 
 
     StudiedStep findFirstByUserAndStep_Session_Id(User user, Long sessionId);
 
-    StudiedStep findByUserIdAndStepId(Long userId, Long stepId);
+    StudiedStep findByUser_IdAndStep_Id(Long userId, Long stepId);
 }

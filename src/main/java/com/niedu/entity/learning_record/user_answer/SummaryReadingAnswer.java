@@ -1,6 +1,7 @@
 package com.niedu.entity.learning_record.user_answer;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,6 +22,8 @@ public class SummaryReadingAnswer extends UserAnswer {
             name = "summary_keywords",
             joinColumns = @JoinColumn(name = "summary_id")
     )
+
+    @Builder.Default
     @Column(name = "keyword")
     private List<String> keywords = new ArrayList<>();
 }

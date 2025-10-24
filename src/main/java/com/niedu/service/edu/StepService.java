@@ -32,7 +32,7 @@ public class StepService {
 
     public AnswerResponse submitStepAnswer(User user, Long stepId, StepAnswerRequest request) {
         // 1. UserAnswer entity 저장
-        StudiedStep studiedStep = studiedStepRepository.findByUserIdAndStepId(user.getId(), stepId);
+        StudiedStep studiedStep = studiedStepRepository.findByUser_IdAndStep_Id(user.getId(), stepId);
         UserAnswer userAnswer = userAnswerMapperService.toEntity(studiedStep, request.userAnswer());
         userAnswerRepository.save(userAnswer);
         // 2. StudiedStep 업데이트
@@ -42,7 +42,7 @@ public class StepService {
     }
 
     public SharedResponse shareMyAnswer(User user, Long stepId, ShareAnswerRequest request) {
-        StudiedStep studiedStep = studiedStepRepository.findByUserIdAndStepId(user.getId(), stepId);
+        StudiedStep studiedStep = studiedStepRepository.findByUser_IdAndStep_Id(user.getId(), stepId);
         SharedResponse sharedResponse = new SharedResponse(
                 null,
                 user,
@@ -55,7 +55,7 @@ public class StepService {
     }
 
     public ArrayList<String> getSharedAnswers(User user, Long stepId) {
-        StudiedStep studiedStep = studiedStepRepository.findByUserIdAndStepId(user.getId(), stepId);
+        StudiedStep studiedStep = studiedStepRepository.findByUser_IdAndStep_Id(user.getId(), stepId);
         List<SharedResponse> sharedResponses = sharedResponseRepository.findAllByStepAndUserNot(studiedStep.getStep(), user);
         ArrayList<String> responses = sharedResponses.stream()
                 .map(SharedResponse::getUserResponse)
@@ -69,7 +69,7 @@ public class StepService {
     }
 
     public AIErrorReport reportErrorInFeedback(User user, Long stepId, ReportFeedbackRequest request) {
-        StudiedStep studiedStep = studiedStepRepository.findByUserIdAndStepId(user.getId(), stepId);
+        StudiedStep studiedStep = studiedStepRepository.findByUser_IdAndStep_Id(user.getId(), stepId);
         AIErrorReport aiErrorReport = new AIErrorReport(
                 null,
                 studiedStep.getStep(),

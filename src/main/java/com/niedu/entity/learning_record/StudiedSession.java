@@ -36,6 +36,7 @@ public class StudiedSession {
     @Column(nullable = false)
     private SessionStatus status;
 
+    @Builder.Default
     @Column(name = "studied_time")
     private Duration studiedTime = Duration.ZERO;
 
