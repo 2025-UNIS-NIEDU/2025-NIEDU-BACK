@@ -5,18 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
 
-@Embeddable
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode
-class CourseSubTopicId implements Serializable {
-    @Column(name = "course_id")
-    private Long courseId;
-    @Column(name = "sub_topic_id")
-    private Long subTopicId;
-}
-
 @Entity
 @Table(name = "course_sub_topics")
 @Getter

@@ -1,5 +1,6 @@
 package com.niedu.entity.course;
 
+import com.niedu.entity.topic.Topic;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -32,6 +33,13 @@ public class Course {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "topic_id", nullable = false)
+    private Topic topic;
+
+    @Column(name = "view_count", nullable = false)
+    private Long viewCount = 0L;
 
     @PrePersist
     protected void onCreate() {
