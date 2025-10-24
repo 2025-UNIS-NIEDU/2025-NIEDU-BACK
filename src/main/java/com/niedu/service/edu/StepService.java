@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StepService {
     private final UserAnswerMapperService userAnswerMapperService;
+    private final AIService aiService;
     private final StudiedStepRepository studiedStepRepository;
     private final UserAnswerRepository userAnswerRepository;
     private final SharedResponseRepository sharedResponseRepository;
@@ -32,8 +33,8 @@ public class StepService {
     public AnswerResponse submitStepAnswer(User user, Long stepId, StepAnswerRequest request) {
         // 1. UserAnswer entity 저장
         StudiedStep studiedStep = studiedStepRepository.findByUserIdAndStepId(user.getId(), stepId);
-        UserAnswer userAnswer = userAnswerMapperService.toEntity(user, studiedStep.getStep(), request.userAnswer());
-        UserAnswer savedUserAnswer = userAnswerRepository.save(userAnswer);
+        UserAnswer userAnswer = userAnswerMapperService.toEntity(studiedStep, request.userAnswer());
+        userAnswerRepository.save(userAnswer);
         // 2. StudiedStep 업데이트
         studiedStep.setIsCompleted(true);
         // 3. 리턴
@@ -63,8 +64,8 @@ public class StepService {
     }
 
     public FeedbackAnswerResponse submitStepAnswerForFeedback(User user, Long stepId, FeedbackAnswerRequest request) {
-        // AI 서버 구동 후에 구현 예정
-        return null;
+        FeedbackAnswerResponse response = aiService.submitStepAnswerForFeedback(user, stepId, request);
+        return response;
     }
 
     public AIErrorReport reportErrorInFeedback(User user, Long stepId, ReportFeedbackRequest request) {
