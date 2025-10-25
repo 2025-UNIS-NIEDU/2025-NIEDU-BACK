@@ -5,4 +5,4 @@ public record OxQuizContentResponse (
         String correctAnswer,
         String answerExplanation,
         String sourceUrl
-) implements ContentResponse {}
+) {}
