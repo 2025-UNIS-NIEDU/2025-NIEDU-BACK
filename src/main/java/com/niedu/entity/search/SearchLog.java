@@ -32,4 +32,10 @@ public class SearchLog {
     protected void onSearch() {
         this.searchedAt = LocalDateTime.now();
     }
+
+    public SearchLog(User user, String keyword) {
+        this.user = user;
+        this.keyword = keyword;
+    }
+
 }
