@@ -1,7 +1,9 @@
 package com.niedu.dto.favorite;
 
+import com.niedu.global.enums.FavoriteType;
+
 public record FavoriteRequest(
-        String type,
+        FavoriteType type,
         Long targetId
 ) {
 }
