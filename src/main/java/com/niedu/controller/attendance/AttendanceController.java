@@ -1,44 +1,37 @@
 package com.niedu.controller.attendance;
 
-import com.niedu.dto.attendance.AttendanceStreakRequest;
-import com.niedu.dto.attendance.AttendanceStreakResponse;
-import com.niedu.service.attendance.AttendanceResponseService;
+import com.niedu.global.response.ApiResponse;
+import com.niedu.dto.attendance.AttendanceStreakRecord;
+import com.niedu.service.user.AttendanceService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "출석", description = "출석 관련 API")
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
 public class AttendanceController {
 
-    private final AttendanceResponseService attendanceService;
+    private final AttendanceService attendanceService;
 
+
+    @Operation(summary = "출석 상황 조회", description = "HOM-HOME-01/SET-ALL-01 명세서")
     @GetMapping("/streak")
-    public ResponseEntity<AttendanceStreakResponse> getStreak(
-            @CookieValue(name = "accessToken", required = false) String accessToken,
-            @RequestBody(required = false) AttendanceStreakRequest request
+    public ResponseEntity<ApiResponse<AttendanceStreakRecord>> getAttendanceStreak(
+            @CookieValue(name = "accessToken") String accessToken
     ) {
-        if (accessToken == null) {
-            return ResponseEntity.status(401).body(
-                    AttendanceStreakResponse.builder()
-                            .success(false)
-                            .status(401)
-                            .message("유효하지 않은 또는 만료된 토큰입니다.")
-                            .data(null)
-                            .build()
-            );
-        }
+        Long userId = 1L;
 
-        // 토큰 검증 후 userId 추출 (예시)
-        Long userId = extractUserIdFromToken(accessToken);
+        int streak = attendanceService.calculateStreak(userId);
 
-        AttendanceStreakResponse response = attendanceService.getAttendanceStreak(userId);
-        return ResponseEntity.status(response.getStatus()).body(response);
-    }
-
-    private Long extractUserIdFromToken(String token) {
-        // JWT 파싱 또는 사용자 정보 추출 로직 (예시)
-        return 1L;
+        AttendanceStreakRecord data = new AttendanceStreakRecord(streak);
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 }

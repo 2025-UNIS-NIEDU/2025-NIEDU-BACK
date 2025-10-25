@@ -1,81 +1,48 @@
 package com.niedu.controller.home;
 
-import com.niedu.dto.attendance.AttendanceStreakResponse;
-import com.niedu.dto.home.*;
+import com.niedu.global.response.ApiResponse;
+import com.niedu.dto.home.HomeCourseRecord;
+import com.niedu.dto.home.HomeNewsRecord;
 import com.niedu.service.home.HomeService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "2. 홈 (Home)", description = "홈 화면 관련 API")
 @RestController
 @RequestMapping("/api/home")
 @RequiredArgsConstructor
+@Validated
 public class HomeController {
 
     private final HomeService homeService;
 
+    @Operation(summary = "오늘자 뉴스 조회", description = "HOM-HOME-02 명세서")
     @GetMapping("/news")
-    public ResponseEntity<HomeNewsResponse> getRandomNews(
-            @CookieValue(name = "accessToken", required = false) String accessToken
+    public ResponseEntity<ApiResponse<HomeNewsRecord>> getHomeNews(
+            @CookieValue(name = "accessToken") String accessToken // Assuming token is needed
     ) {
-        if (accessToken == null) {
-            return ResponseEntity.status(401).body(
-                    HomeNewsResponse.builder()
-                            .success(false)
-                            .status(401)
-                            .message("유효하지 않은 또는 만료된 토큰입니다.")
-                            .data(null)
-                            .build()
-            );
-        }
-
-        HomeNewsResponse response = homeService.getRandomNews();
-        return ResponseEntity.status(response.getStatus()).body(response);
+        HomeNewsRecord data = homeService.getRandomNews();
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 
+    @Operation(summary = "홈 내 코스 조회", description = "HOM-HOME-03/04/RECENT-01/SAVED-01 명세서")
     @GetMapping("/courses")
-    public ResponseEntity<HomeCoursesResponse> getCourses(
-            @CookieValue(name = "accessToken", required = false) String accessToken,
-            @RequestParam String type,
-            @RequestParam String view
+    public ResponseEntity<ApiResponse<HomeCourseRecord.CourseListResponse>> getHomeCourses(
+            @CookieValue(name = "accessToken") String accessToken, // Assuming token is needed
+            @Parameter(description = "코스 타입: `recent` 또는 `saved`", required = true)
+            @RequestParam @Pattern(regexp = "recent|saved") String type,
+            @Parameter(description = "뷰 타입: `preview` 또는 `all`", required = true)
+            @RequestParam @Pattern(regexp = "preview|all") String view
     ) {
-        if (accessToken == null) {
-            return ResponseEntity.status(401).body(
-                    HomeCoursesResponse.builder()
-                            .success(false)
-                            .status(401)
-                            .message("유효하지 않은 또는 만료된 토큰입니다.")
-                            .data(null)
-                            .build()
-            );
-        }
-
-        Long userId = extractUserIdFromToken(accessToken);
-        HomeCoursesResponse response = homeService.getCourses(userId, type, view);
-        return ResponseEntity.status(response.getStatus()).body(response);
-    }
-
-    @GetMapping("/attendance/streak")
-    public ResponseEntity<AttendanceStreakResponse> getAttendanceStreak(
-            @CookieValue(name = "accessToken", required = false) String accessToken
-    ) {
-        if (accessToken == null) {
-            return ResponseEntity.status(401).body(
-                    AttendanceStreakResponse.builder()
-                            .success(false)
-                            .status(401)
-                            .message("유효하지 않은 또는 만료된 토큰입니다.")
-                            .data(null)
-                            .build()
-            );
-        }
-
-        Long userId = extractUserIdFromToken(accessToken);
-        AttendanceStreakResponse response = homeService.getAttendanceStreak(userId);
-        return ResponseEntity.status(response.getStatus()).body(response);
-    }
-
-    private Long extractUserIdFromToken(String token) {
-        return 1L;
+        Long userId = 1L;
+        HomeCourseRecord.CourseListResponse data = homeService.getCourses(userId, type, view);
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 }

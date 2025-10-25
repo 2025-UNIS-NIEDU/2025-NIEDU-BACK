@@ -51,4 +51,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     ORDER BY function('random')
     """)
     List<Course> findRandomUnstudiedCoursesByUser(@Param("userId") Long userId, Pageable pageable);
+
+    List<Course> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }
