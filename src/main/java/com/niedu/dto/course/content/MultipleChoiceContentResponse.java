@@ -6,6 +6,5 @@ public record MultipleChoiceContentResponse (
         String question,
         ArrayList<MultipleChoiceOptionContent> options,
         String correctAnswer,
-        String answerExplanation,
-        String sourceUrl
+        String answerExplanation
 ) implements ContentResponse {}
