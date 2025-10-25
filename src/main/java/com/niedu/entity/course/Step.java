@@ -30,8 +30,4 @@ public class Step {
     @Enumerated(EnumType.STRING)
     @Column(name = "step_type", nullable = false)
     private StepType type;
-
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "content_id")
-    private Content content;
 }
