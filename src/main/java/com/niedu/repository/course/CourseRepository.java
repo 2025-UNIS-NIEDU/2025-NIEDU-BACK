@@ -53,4 +53,12 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findRandomUnstudiedCoursesByUser(@Param("userId") Long userId, Pageable pageable);
 
     List<Course> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    @Query("""
+        SELECT sc.course
+        FROM SavedCourse sc
+        WHERE sc.user.id = :userId
+        ORDER BY sc.course.createdAt DESC 
+        """)
+    List<Course> findSavedCoursesByUserId(@Param("userId") Long userId, Pageable pageable);
 }
