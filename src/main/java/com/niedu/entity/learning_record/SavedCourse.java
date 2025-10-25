@@ -6,18 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
 
-@Embeddable
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode
-class SavedCourseId implements Serializable {
-    @Column(name = "user_id")
-    private Long userId;
-    @Column(name = "course_id")
-    private Long courseId;
-}
-
 @Entity
 @Table(name = "saved_courses")
 @Getter
