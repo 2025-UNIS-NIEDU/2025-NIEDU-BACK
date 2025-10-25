@@ -5,4 +5,4 @@ import java.util.List;
 public record MultipleChoiceContentListResponse(
         String sourceUrl,
         List<MultipleChoiceContentResponse> contents
-){ }
+) implements ContentResponse {}

@@ -7,4 +7,4 @@ public record MultipleChoiceContentResponse (
         ArrayList<MultipleChoiceOptionContent> options,
         String correctAnswer,
         String answerExplanation
-) implements ContentResponse {}
+) {}
