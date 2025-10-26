@@ -1,6 +1,7 @@
 package com.niedu.service.edu.content.strategy;
 
 import com.niedu.dto.course.content.ContentResponse;
+import com.niedu.dto.course.content.OxQuizContentListResponse;
 import com.niedu.dto.course.content.OxQuizContentResponse;
 import com.niedu.entity.content.Content;
 import com.niedu.entity.content.OxQuiz;
@@ -8,6 +9,8 @@ import com.niedu.entity.course.Step;
 import com.niedu.entity.course.StepType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Slf4j
 @Component
@@ -19,19 +22,24 @@ public class OxQuizContentMapper implements ContentMapperStrategy{
     }
 
     @Override
-    public ContentResponse toResponse(Step step) {
-        Content content = step.getContent();
-        if (content instanceof OxQuiz oxQuiz) {
-            return new OxQuizContentResponse(
-                    oxQuiz.getQuestion(),
-                    oxQuiz.getCorrectAnswer(),
-                    oxQuiz.getAnswerExplanation(),
-                    step.getSession().getNewsRef().getSourceUrl()
-            );
-        }
-        else {
-            log.warn("이 Step은 OxQuiz 타입이 아닙니다: {}", content.getClass().getSimpleName());
-            return null;
-        }
+    public ContentResponse toResponse(Step step, List<Content> contents) {
+        List<OxQuiz> oxQuizs = contents.stream()
+                .filter(content -> content instanceof OxQuiz)
+                .map(content -> (OxQuiz) content)
+                .toList();
+        if (oxQuizs == null || oxQuizs.isEmpty()) throw new RuntimeException("content 조회 실패");
+
+        List<OxQuizContentResponse> oxQuizContentResponses = oxQuizs.stream()
+                .map(oxQuiz -> new OxQuizContentResponse(
+                        oxQuiz.getId(),
+                        oxQuiz.getQuestion(),
+                        oxQuiz.getCorrectAnswer(),
+                        oxQuiz.getAnswerExplanation()
+                ))
+                .toList();
+        return new OxQuizContentListResponse(
+                step.getSession().getNewsRef().getSourceUrl(),
+                oxQuizContentResponses
+        );
     }
 }
