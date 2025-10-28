@@ -1,7 +1,9 @@
 package com.niedu.service.edu.user_answer.strategy;
 
 import com.niedu.dto.course.content.KeywordContent;
+import com.niedu.dto.course.is_correct.IsCorrectResponse;
 import com.niedu.dto.course.user_answer.AnswerResponse;
+import com.niedu.dto.course.user_answer.SimpleAnswerResponse;
 import com.niedu.dto.course.user_answer.SummaryReadingAnswerResponse;
 import com.niedu.entity.content.Content;
 import com.niedu.entity.content.SummaryReading;
@@ -12,75 +14,90 @@ import com.niedu.entity.learning_record.user_answer.UserAnswer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.niedu.entity.course.StepType.SUMMARY_READING;
 
 @Component
 @Slf4j
 public class SummaryReadingAnswerMapper implements UserAnswerMapperStrategy{
     @Override
     public boolean supports(StepType type) {
-        return type == StepType.SUMMARY_READING;
+        return type.equals(SUMMARY_READING);
     }
 
     @Override
-    public AnswerResponse toResponse(UserAnswer userAnswer) {
-        if (userAnswer instanceof SummaryReadingAnswer summaryReadingAnswer) {
+    public AnswerResponse toResponse(List<UserAnswer> userAnswers) {
+        if (userAnswers.get(0) instanceof SummaryReadingAnswer summaryReadingAnswer) {
             return new SummaryReadingAnswerResponse(
-                    summaryReadingAnswer.getKeywords()
-            );
+                    summaryReadingAnswer.getContent().getId(),
+                    summaryReadingAnswer.getKeywords());
         }
-        log.warn("지원되는 userAnswer이 아닙니다. type={}", userAnswer.getStudiedStep().getStep().getType());
-        return null;
+        else throw new RuntimeException("response 변환 실패");
     }
 
     @Override
-    public UserAnswer toEntity(StudiedStep studiedStep, AnswerResponse userAnswerRequest) {
-        if (userAnswerRequest instanceof SummaryReadingAnswerResponse summaryReadingAnswerResponse) {
-            return SummaryReadingAnswer.builder()
-                    .studiedStep(studiedStep)
-                    .keywords(summaryReadingAnswerResponse.keywords())
-                    .isCorrect(checkIsCorrect(studiedStep, userAnswerRequest))
-                    .build();
-        }
-        log.warn("지원되는 AnswerRequest가 아닙니다. type={}", studiedStep.getStep().getType());
-        return null;
+    public List<UserAnswer> toEntities(StudiedStep studiedStep, List<Content> contents, AnswerResponse request) {
+        if (!(request instanceof SummaryReadingAnswerResponse summaryReadingAnswerResponse))
+            throw new RuntimeException("entity 변환 실패");
+
+        Map<Long, Content> contentMap = contents.stream()
+                .collect(Collectors.toMap(Content::getId, c -> c));
+
+        SummaryReadingAnswer summaryReadingAnswer = SummaryReadingAnswer.builder()
+                .studiedStep(studiedStep)
+                .content(contentMap.get(summaryReadingAnswerResponse.contentId()))
+                .keywords(summaryReadingAnswerResponse.keywords())
+                .build();
+
+        return List.of(summaryReadingAnswer);
     }
 
     @Override
-    public void updateEntity(UserAnswer existingUserAnswer, AnswerResponse userAnswerRequest) {
-        if (existingUserAnswer instanceof SummaryReadingAnswer entity && userAnswerRequest instanceof SummaryReadingAnswerResponse request) {
-            entity.setKeywords(request.keywords());
-            entity.setIsCorrect(checkIsCorrect(entity.getStudiedStep(), userAnswerRequest));
-        }
-        else {
-            log.warn("지원되는 AnswerRequest가 아닙니다. type={}", existingUserAnswer.getStudiedStep().getStep().getType());
-        }
-    }
-
-    @Override
-    public boolean checkIsCorrect(StudiedStep studiedStep, AnswerResponse request) {
+    public void updateEntities(List<UserAnswer> existingUserAnswers, List<Content> contents, AnswerResponse request) {
         if (!(request instanceof SummaryReadingAnswerResponse summaryReadingAnswerResponse)) {
-            log.warn("지원되지 않는 AnswerResponse 타입: {}", request.getClass().getSimpleName());
-            return false;
+            throw new RuntimeException("entity 업데이트 실패");
         }
 
-        Content content = studiedStep.getStep().getContent();
-        if (!(content instanceof SummaryReading summaryReading)) {
-            log.warn("StudiedStep {} 의 Content가 SummaryReading이 아닙니다.", studiedStep.getId());
-            return false;
+        // contentId → Content 매핑
+        Map<Long, Content> contentMap = contents.stream()
+                .collect(Collectors.toMap(Content::getId, c -> c));
+
+        Long contentId = summaryReadingAnswerResponse.contentId();
+        Content content = contentMap.get(contentId);
+        if (content == null) {
+            throw new RuntimeException("해당 contentId에 대응되는 Content를 찾을 수 없습니다: " + contentId);
         }
 
-        List<String> correctKeywords = summaryReading.getKeywords().stream()
-                .filter(KeywordContent::isTopicWord)
-                .map(KeywordContent::word)
-                .filter(Objects::nonNull)
-                .map(String::trim)
-                .toList();
+        existingUserAnswers.stream()
+                .filter(answer -> answer instanceof SummaryReadingAnswer)
+                .map(answer -> (SummaryReadingAnswer) answer)
+                .filter(answer -> answer.getContent() != null && answer.getContent().getId().equals(contentId))
+                .forEach(entity -> {
+                    entity.setContent(content);
+                    entity.setKeywords(summaryReadingAnswerResponse.keywords());
+                });
+    }
 
-        List<String> userKeywords = summaryReadingAnswerResponse.keywords();
-        if (userKeywords == null || userKeywords.isEmpty()) return false;
+    @Override
+    public List<IsCorrectResponse> checkIsCorrect(List<Content> contents, AnswerResponse request) {
+        if (request instanceof SummaryReadingAnswerResponse summaryReadingAnswerResponse) {
+            Set<String> correctAnswerSet = ((SummaryReading) contents.get(0)).getKeywords().stream()
+                    .filter(KeywordContent::isTopicWord)
+                    .map(KeywordContent::word)
+                    .map(String::toLowerCase)
+                    .collect(Collectors.toSet());
 
-        return userKeywords.containsAll(correctKeywords);
+            Set<String> userAnswerSet = summaryReadingAnswerResponse.keywords().stream()
+                    .map(String::toLowerCase)
+                    .collect(Collectors.toSet());
+
+            boolean isCorrect = userAnswerSet.containsAll(correctAnswerSet)
+                    && correctAnswerSet.containsAll(userAnswerSet);
+
+            return List.of(new IsCorrectResponse(summaryReadingAnswerResponse.contentId(), isCorrect));
+        }
+        else throw new RuntimeException("정답 여부 조회 실패");
     }
 }
