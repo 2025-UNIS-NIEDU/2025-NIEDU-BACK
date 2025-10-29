@@ -1,7 +1,7 @@
 package com.niedu.service.search;
 
-import com.niedu.dto.search.CourseSearchResultRecord;
-import com.niedu.dto.search.SearchHistoryRecord;
+import com.niedu.dto.search.CourseSearchResponse;
+import com.niedu.dto.search.SearchHistoryResponse;
 import com.niedu.entity.course.Course;
 import com.niedu.entity.search.SearchLog;
 import com.niedu.entity.user.User;
@@ -10,12 +10,12 @@ import com.niedu.repository.search.SearchLogRepository;
 import com.niedu.repository.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // Page import
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -27,10 +27,10 @@ public class SearchService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
 
-    public List<SearchHistoryRecord> getSearchHistory(Long userId) {
+    public List<SearchHistoryResponse> getSearchHistory(Long userId) {
         Pageable pageable = PageRequest.of(0, 10);
         List<SearchLog> logs = searchLogRepository.findByUser_IdOrderBySearchedAtDesc(userId, pageable);
-        return SearchHistoryRecord.fromEntities(logs);
+        return SearchHistoryResponse.fromEntities(logs);
     }
 
     @Transactional
@@ -44,14 +44,15 @@ public class SearchService {
     }
 
     @Transactional
-    public List<CourseSearchResultRecord> searchCourses(Long userId, String keyword, String sort) {
+    public Page<CourseSearchResponse> searchCourses(Long userId, String keyword, String sort, int page, int size) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
         SearchLog searchLog = new SearchLog(user, keyword);
         searchLogRepository.save(searchLog);
 
-        Pageable pageable = PageRequest.of(0, 10);
-        List<Course> courses;
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Course> courses;
 
         if ("recent".equalsIgnoreCase(sort)) {
             courses = courseRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(keyword, pageable);
@@ -61,6 +62,6 @@ public class SearchService {
             throw new IllegalArgumentException("Invalid sort parameter: " + sort);
         }
 
-        return CourseSearchResultRecord.fromEntities(courses);
+        return courses.map(CourseSearchResponse::fromEntity);
     }
 }

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Schema(description = "코스 검색 결과 응답 Record")
-public record CourseSearchResultRecord(
+public record CourseSearchResponse(
         @Schema(description = "썸네일 URL")
         String thumbnailUrl,
         @Schema(description = "코스 제목")
@@ -18,9 +18,15 @@ public record CourseSearchResultRecord(
         @Schema(description = "코스 짧은 설명")
         String shortDescription
 ) {
-    public static CourseSearchResultRecord fromEntity(Course course) {
-        List<String> fetchedTags = Collections.emptyList();
-        return new CourseSearchResultRecord(
+    public static CourseSearchResponse fromEntity(Course course) {
+        List<String> fetchedTags;
+        if (course.getTopic() != null && course.getTopic().getName() != null) {
+            fetchedTags = List.of(course.getTopic().getName());
+        } else {
+            fetchedTags = Collections.emptyList();
+        }
+
+        return new CourseSearchResponse(
                 course.getThumbnailUrl(),
                 course.getTitle(),
                 fetchedTags,
@@ -28,9 +34,9 @@ public record CourseSearchResultRecord(
         );
     }
 
-    public static List<CourseSearchResultRecord> fromEntities(List<Course> courses) {
+    public static List<CourseSearchResponse> fromEntities(List<Course> courses) {
         return courses.stream()
-                .map(CourseSearchResultRecord::fromEntity)
+                .map(CourseSearchResponse::fromEntity)
                 .collect(Collectors.toList());
     }
 }

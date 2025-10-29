@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Schema(description = "검색 기록 응답 Record")
-public record SearchHistoryRecord(
+public record SearchHistoryResponse(
         @Schema(description = "검색 기록 ID")
         Long logId,
         @Schema(description = "검색 키워드")
@@ -16,17 +16,17 @@ public record SearchHistoryRecord(
         LocalDateTime searchedAt
 ) {
 
-    public static SearchHistoryRecord fromEntity(SearchLog searchLog) {
-        return new SearchHistoryRecord(
+    public static SearchHistoryResponse fromEntity(SearchLog searchLog) {
+        return new SearchHistoryResponse(
                 searchLog.getId(),
                 searchLog.getKeyword(),
                 searchLog.getSearchedAt()
         );
     }
 
-    public static List<SearchHistoryRecord> fromEntities(List<SearchLog> searchLogs) {
+    public static List<SearchHistoryResponse> fromEntities(List<SearchLog> searchLogs) {
         return searchLogs.stream()
-                .map(SearchHistoryRecord::fromEntity)
+                .map(SearchHistoryResponse::fromEntity)
                 .collect(Collectors.toList());
     }
 }
