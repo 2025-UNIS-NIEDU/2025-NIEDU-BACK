@@ -16,6 +16,7 @@ public abstract class Content {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(mappedBy = "content")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "step_id", nullable = false)
     private Step step;
 }

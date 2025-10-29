@@ -1,8 +1,8 @@
 package com.niedu.dto.course.user_answer;
 
 public record SentenceCompletionAnswerResponse(
-        Integer questionIndex,
+        Long contentId,
         String userAnswer,
         Integer AIScore,
         String AIFeedback
-) implements AnswerResponse {}
+) {}

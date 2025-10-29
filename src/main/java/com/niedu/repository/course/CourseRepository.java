@@ -1,9 +1,8 @@
 package com.niedu.repository.course;
 
 import com.niedu.entity.course.Course;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Page; // Page import
+import org.springframework.data.domain.Pageable; // PageRequest 대신 Pageable import
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,11 +14,10 @@ import java.util.List;
 public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findByTopic_NameIgnoreCaseOrderByCreatedAtDesc(String topicName, Pageable pageable);
 
-    List<Course> findAllByOrderByViewCountDesc(PageRequest of);
+    List<Course> findAllByOrderByViewCountDesc(Pageable pageable);
 
     @Query("""
-
-            SELECT c
+        SELECT c
         FROM Course c
         WHERE c.topic IN (
             SELECT utp.topic
@@ -54,6 +52,17 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     """)
     List<Course> findRandomUnstudiedCoursesByUser(@Param("userId") Long userId, Pageable pageable);
 
+
+    Page<Course> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    @Query("""
+        SELECT sc.course
+        FROM SavedCourse sc
+        WHERE sc.user.id = :userId
+        ORDER BY sc.course.createdAt DESC 
+        """)
+    List<Course> findSavedCoursesByUserId(@Param("userId") Long userId, Pageable pageable);
+
     Page<Course> findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(String keyword, Pageable pageable);
     Page<Course> findByTitleContainingIgnoreCaseOrderByViewCountDesc(String keyword, Pageable pageable);
-    }
+}

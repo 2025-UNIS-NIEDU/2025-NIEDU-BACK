@@ -27,7 +27,7 @@ public class TermLearningContentMapper implements ContentMapperStrategy {
     }
 
     @Override
-    public ContentResponse toResponse(Step step) {
+    public ContentResponse toResponse(Step step, List<Content> contents) {
         List<Term> terms = termRepository.findAllBySession(step.getSession());
         ArrayList<TermContent> termContents = terms.stream()
                 .map(term -> new TermContent(

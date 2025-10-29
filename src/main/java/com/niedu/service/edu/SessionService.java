@@ -1,12 +1,14 @@
 package com.niedu.service.edu;
 
 import com.niedu.dto.course.*;
+import com.niedu.entity.content.Content;
 import com.niedu.entity.course.Session;
 import com.niedu.entity.course.Step;
 import com.niedu.entity.learning_record.SessionStatus;
 import com.niedu.entity.learning_record.StudiedSession;
 import com.niedu.entity.learning_record.StudiedStep;
 import com.niedu.entity.user.User;
+import com.niedu.repository.content.ContentRepository;
 import com.niedu.repository.course.SessionRepository;
 import com.niedu.repository.course.StepRepository;
 import com.niedu.repository.learning_record.StudiedSessionRepository;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SessionService {
+    private final ContentRepository contentRepository;
     private final StepMapperService stepMapperService;
     private final UserAnswerMapperService userAnswerMapperService;
     private final AttendanceService attendanceService;
@@ -74,12 +77,13 @@ public class SessionService {
             ArrayList<StepListResponse> stepListResponses = studiedSteps.stream()
                     .map(studiedStep -> {
                         Step step = studiedStep.getStep();
+                        List<Content> contents = contentRepository.findAllByStep(step);
                         return new StepListResponse(
                                 step.getId(),
                                 step.getStepOrder(),
                                 studiedStep.getIsCompleted(),
                                 step.getType(),
-                                stepMapperService.toResponse(step),
+                                stepMapperService.toResponse(step, contents),
                                 userAnswerMapperService.toResponse(studiedStep), // 없으면 null
                                 userAnswerMapperService.checkIsCorrect(studiedStep) // 없으면 null
                         );
@@ -91,6 +95,7 @@ public class SessionService {
                     stepListResponses,
                     savedStudiedSession.getProgress()
             );
+            return response;
         }
         else {
             // 이전 학습 경험이 있는 경우
@@ -103,12 +108,13 @@ public class SessionService {
             ArrayList<StepListResponse> stepListResponses = studiedSteps.stream()
                     .map(studiedStep -> {
                         Step step = studiedStep.getStep();
+                        List<Content> contents = contentRepository.findAllByStep(step);
                         return new StepListResponse(
                                 step.getId(),
                                 step.getStepOrder(),
                                 studiedStep.getIsCompleted(),
                                 step.getType(),
-                                stepMapperService.toResponse(step),
+                                stepMapperService.toResponse(step, contents),
                                 userAnswerMapperService.toResponse(studiedStep), // 없으면 null
                                 userAnswerMapperService.checkIsCorrect(studiedStep)  // 없으면 null
                         );
@@ -123,8 +129,8 @@ public class SessionService {
                     stepListResponses,
                     savedStudiedSession.getProgress()
             );
+            return response;
         }
-        return null;
     }
 
     public void quitSession(User user, Long sessionId) {

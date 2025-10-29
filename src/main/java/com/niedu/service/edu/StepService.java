@@ -33,8 +33,7 @@ public class StepService {
     public AnswerResponse submitStepAnswer(User user, Long stepId, StepAnswerRequest request) {
         // 1. UserAnswer entity 저장
         StudiedStep studiedStep = studiedStepRepository.findByUser_IdAndStep_Id(user.getId(), stepId);
-        UserAnswer userAnswer = userAnswerMapperService.toEntity(studiedStep, request.userAnswer());
-        userAnswerRepository.save(userAnswer);
+        List<UserAnswer> userAnswers = userAnswerMapperService.toEntities(studiedStep, request.userAnswer());
         // 2. StudiedStep 업데이트
         studiedStep.setIsCompleted(true);
         // 3. 리턴

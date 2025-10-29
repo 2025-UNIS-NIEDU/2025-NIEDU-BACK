@@ -1,6 +1,7 @@
 package com.niedu.service.edu.content.strategy;
 
 import com.niedu.dto.course.content.ContentResponse;
+import com.niedu.dto.course.content.MultipleChoiceContentListResponse;
 import com.niedu.dto.course.content.MultipleChoiceContentResponse;
 import com.niedu.dto.course.content.MultipleChoiceOptionContent;
 import com.niedu.entity.content.Content;
@@ -23,26 +24,33 @@ public class MultipleChoiceContentMapper implements ContentMapperStrategy{
     }
 
     @Override
-    public ContentResponse toResponse(Step step) {
-        Content content = step.getContent();
-        if (content instanceof MultipleChoiceQuiz multipleChoiceQuiz) {
-            ArrayList<MultipleChoiceOptionContent> options = new ArrayList<>(List.of(
-                    new MultipleChoiceOptionContent("A", multipleChoiceQuiz.getOptionA()),
-                    new MultipleChoiceOptionContent("B", multipleChoiceQuiz.getOptionB()),
-                    new MultipleChoiceOptionContent("C", multipleChoiceQuiz.getOptionC()),
-                    new MultipleChoiceOptionContent("D", multipleChoiceQuiz.getOptionD())
-            ));
-            return new MultipleChoiceContentResponse(
-                    multipleChoiceQuiz.getQuestion(),
-                    options,
-                    multipleChoiceQuiz.getCorrectAnswer(),
-                    multipleChoiceQuiz.getAnswerExplanation(),
-                    step.getSession().getNewsRef().getSourceUrl()
-            );
-        }
-        else {
-            log.warn("이 Step은 MultipleChoiceQuiz 타입이 아닙니다: {}", content.getClass().getSimpleName());
-            return null;
-        }
+    public ContentResponse toResponse(Step step, List<Content> contents) {
+        List<MultipleChoiceQuiz> multipleChoiceQuizs = contents.stream()
+                .filter(content -> content instanceof MultipleChoiceQuiz)
+                .map(content -> (MultipleChoiceQuiz) content)
+                .toList();
+        if (multipleChoiceQuizs == null || multipleChoiceQuizs.isEmpty()) throw new RuntimeException("content 조회 실패");
+
+        List<MultipleChoiceContentResponse> multipleChoiceContentResponses = multipleChoiceQuizs.stream()
+                .map(multipleChoiceQuiz -> {
+                    List<MultipleChoiceOptionContent> options = new ArrayList<>(List.of(
+                            new MultipleChoiceOptionContent("A", multipleChoiceQuiz.getOptionA()),
+                            new MultipleChoiceOptionContent("B", multipleChoiceQuiz.getOptionB()),
+                            new MultipleChoiceOptionContent("C", multipleChoiceQuiz.getOptionC()),
+                            new MultipleChoiceOptionContent("D", multipleChoiceQuiz.getOptionD())
+                    ));
+                    return new MultipleChoiceContentResponse(
+                            multipleChoiceQuiz.getId(),
+                            multipleChoiceQuiz.getQuestion(),
+                            options,
+                            multipleChoiceQuiz.getCorrectAnswer(),
+                            multipleChoiceQuiz.getAnswerExplanation()
+                    );
+                })
+                .toList();
+        return new MultipleChoiceContentListResponse(
+                step.getSession().getNewsRef().getSourceUrl(),
+                multipleChoiceContentResponses
+        );
     }
 }
