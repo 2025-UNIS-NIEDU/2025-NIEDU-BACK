@@ -1,12 +1,14 @@
 package com.niedu.service.edu.user_answer.strategy;
 
+import com.niedu.dto.course.is_correct.IsCorrectResponse;
 import com.niedu.dto.course.user_answer.AnswerResponse;
+import com.niedu.dto.course.user_answer.SentenceCompletionAnswerResponse;
+import com.niedu.dto.course.user_answer.SimpleAnswerListResponse;
 import com.niedu.dto.course.user_answer.SimpleAnswerResponse;
 import com.niedu.entity.content.Content;
 import com.niedu.entity.content.MultipleChoiceQuiz;
 import com.niedu.entity.content.OxQuiz;
 import com.niedu.entity.content.ShortAnswerQuiz;
-import com.niedu.entity.course.Step;
 import com.niedu.entity.course.StepType;
 import com.niedu.entity.learning_record.StudiedStep;
 import com.niedu.entity.learning_record.user_answer.SimpleAnswer;
@@ -16,7 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.niedu.entity.course.StepType.*;
 
@@ -26,68 +31,111 @@ import static com.niedu.entity.course.StepType.*;
 public class SimpleAnswerMapper implements UserAnswerMapperStrategy{
     @Override
     public boolean supports(StepType type) {
-        return EnumSet.of(OX_QUIZ, MULTIPLE_CHOICE, SHORT_ANSWER).contains(type);
+        if (type.equals(SHORT_ANSWER) || type.equals(OX_QUIZ) || type.equals(MULTIPLE_CHOICE)) return true;
+        return false;
     }
 
     @Override
-    public AnswerResponse toResponse(UserAnswer userAnswer) {
-        if (userAnswer instanceof SimpleAnswer simpleAnswer) {
-            return new SimpleAnswerResponse(
-                    simpleAnswer.getValue()
-            );
-        }
-        log.warn("지원되는 userAnswer이 아닙니다. type={}", userAnswer.getStudiedStep().getStep().getType());
-        return null;
+    public AnswerResponse toResponse(List<UserAnswer> userAnswers) {
+        List<SimpleAnswerResponse> simpleAnswerResponses = userAnswers.stream()
+                .filter(userAnswer -> userAnswer instanceof SimpleAnswer)
+                .map(userAnswer -> {
+                    SimpleAnswer simpleAnswer = (SimpleAnswer) userAnswer;
+                    return new SimpleAnswerResponse(
+                            simpleAnswer.getContent().getId(),
+                            simpleAnswer.getValue()
+                    );
+                })
+                .toList();
+        if (simpleAnswerResponses == null || simpleAnswerResponses.isEmpty())
+            throw new RuntimeException("response 변환 실패");
+        return new SimpleAnswerListResponse(simpleAnswerResponses);
     }
 
     @Override
-    public UserAnswer toEntity(StudiedStep studiedStep, AnswerResponse userAnswerRequest) {
-        if (userAnswerRequest instanceof SimpleAnswerResponse simpleAnswerResponse) {
-            return SimpleAnswer.builder()
-                    .isCorrect(checkIsCorrect(studiedStep, userAnswerRequest))
-                    .studiedStep(studiedStep)
-                    .value(simpleAnswerResponse.value())
-                    .build();
-        }
-        log.warn("지원되는 AnswerRequest가 아닙니다. type={}", studiedStep.getStep().getType());
-        return null;
+    public List<UserAnswer> toEntities(StudiedStep studiedStep, List<Content> contents, AnswerResponse request) {
+        if (!(request instanceof SimpleAnswerListResponse listResponse))
+            throw new RuntimeException("entity 변환 실패");
+
+        Map<Long, Content> contentMap = contents.stream()
+                .collect(Collectors.toMap(Content::getId, c -> c));
+
+
+        return listResponse.answers().stream()
+                .map(resp -> {
+                    Content content = contentMap.get(resp.contentId());
+                    if (content == null) {
+                        log.warn("No matching content found for contentId={}", resp.contentId());
+                    }
+                    return SimpleAnswer.builder()
+                            .studiedStep(studiedStep)
+                            .content(content)
+                            .value(resp.value())
+                            .build();
+                })
+                .map(answer -> (UserAnswer) answer)
+                .toList();
     }
 
     @Override
-    public void updateEntity(UserAnswer existingUserAnswer, AnswerResponse userAnswerRequest) {
-        if (existingUserAnswer instanceof SimpleAnswer entity && userAnswerRequest instanceof SimpleAnswerResponse request) {
-            entity.setValue(request.value());
-            entity.setIsCorrect(checkIsCorrect(entity.getStudiedStep(), userAnswerRequest));
+    public void updateEntities(List<UserAnswer> existingUserAnswers, List<Content> contents, AnswerResponse request) {
+        if (!(request instanceof SimpleAnswerListResponse listResponse)) {
+            throw new RuntimeException("Invalid request type for SENTENCE_COMPLETION");
         }
-        else {
-            log.warn("지원되는 AnswerRequest가 아닙니다. type={}", existingUserAnswer.getStudiedStep().getStep().getType());
-        }
+
+        // contentId → Content 매핑
+        Map<Long, Content> contentMap = contents.stream()
+                .collect(Collectors.toMap(Content::getId, c -> c));
+
+        // contentId → AnswerResponse 매핑
+        Map<Long, SimpleAnswerResponse> responseMap = listResponse.answers().stream()
+                .collect(Collectors.toMap(SimpleAnswerResponse::contentId, r -> r));
+
+        existingUserAnswers.stream()
+                .filter(userAnswer -> userAnswer instanceof SimpleAnswer)
+                .map(userAnswer -> (SimpleAnswer) userAnswer)
+                .forEach(entity -> {
+                    Long contentId = entity.getContent().getId();
+                    SimpleAnswerResponse newResponse = responseMap.get(contentId);
+                    if (newResponse == null) {
+                        log.warn("No matching response for contentId={}", contentId);
+                        return;
+                    }
+
+                    // 업데이트 필드들
+                    entity.setValue(newResponse.value());
+                });
     }
 
     @Override
-    public boolean checkIsCorrect(StudiedStep studiedStep, AnswerResponse request) {
-        // 타입 안전성 검사
-        if (!(request instanceof SimpleAnswerResponse simpleAnswerResponse)) {
-            log.warn("지원되지 않는 AnswerResponse 타입: {}",
-                    request != null ? request.getClass().getSimpleName() : "null");
-            return false;
+    public List<IsCorrectResponse> checkIsCorrect(List<Content> contents, AnswerResponse request) {
+        Map<Long, String> contentAnswerMap = contents.stream()
+                .filter(content ->
+                        content instanceof MultipleChoiceQuiz ||
+                                content instanceof OxQuiz ||
+                                content instanceof ShortAnswerQuiz)
+                .collect(Collectors.toMap(Content::getId, content -> {
+                    if (content instanceof MultipleChoiceQuiz quiz) {
+                        return quiz.getCorrectAnswer();
+                    } else if (content instanceof OxQuiz quiz) {
+                        return quiz.getCorrectAnswer();
+                    } else if (content instanceof ShortAnswerQuiz quiz) {
+                        return quiz.getCorrectAnswer();
+                    }
+                    return null;
+                }));
+
+        if (request instanceof SimpleAnswerListResponse simpleAnswerListResponse) {
+            List<SimpleAnswerResponse> simpleAnswerResponses = simpleAnswerListResponse.answers();
+            List<IsCorrectResponse> isCorrectResponses = simpleAnswerResponses.stream()
+                    .map(simpleAnswerResponse -> {
+                        String correctAnswer = contentAnswerMap.get(simpleAnswerResponse.contentId());
+                        return new IsCorrectResponse(simpleAnswerResponse.contentId(), (correctAnswer.equals(simpleAnswerResponse.value())));
+                    })
+                    .toList();
+            return isCorrectResponses;
         }
-
-        Content content = studiedStep.getStep().getContent();
-        if (content == null) {
-            log.warn("StudiedStep {} 의 Content가 null입니다.", studiedStep.getId());
-            return false;
-        }
-
-        // 정답 추출
-        String correctAnswer = switch (content) {
-            case OxQuiz ox -> ox.getCorrectAnswer();
-            case MultipleChoiceQuiz mc -> mc.getCorrectAnswer();
-            case ShortAnswerQuiz sa -> sa.getCorrectAnswer();
-            default -> null;
-        };
-
-        // null-safe 비교
-        return Objects.equals(correctAnswer, simpleAnswerResponse.value());
+        else throw new RuntimeException("정답 여부 조회 실패");
     }
+
 }

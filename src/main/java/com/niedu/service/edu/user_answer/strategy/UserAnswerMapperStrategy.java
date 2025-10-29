@@ -1,19 +1,23 @@
 package com.niedu.service.edu.user_answer.strategy;
 
+import com.niedu.dto.course.is_correct.IsCorrectResponse;
 import com.niedu.dto.course.user_answer.AnswerResponse;
-import com.niedu.entity.course.Step;
+import com.niedu.entity.content.Content;
 import com.niedu.entity.course.StepType;
 import com.niedu.entity.learning_record.StudiedStep;
 import com.niedu.entity.learning_record.user_answer.UserAnswer;
-import com.niedu.entity.user.User;
+
+import java.util.List;
+import java.util.Map;
 
 public interface UserAnswerMapperStrategy {
     boolean supports(StepType type);
-    AnswerResponse toResponse(UserAnswer userAnswer);
 
-    UserAnswer toEntity(StudiedStep studiedStep, AnswerResponse userAnswerRequest);
+    AnswerResponse toResponse(List<UserAnswer> userAnswers);
 
-    void updateEntity(UserAnswer existingUserAnswer, AnswerResponse userAnswerRequest);
+    List<UserAnswer> toEntities(StudiedStep studiedStep, List<Content> contents, AnswerResponse request);
 
-    boolean checkIsCorrect(StudiedStep studiedStep, AnswerResponse userAnswerRequest);
+    void updateEntities(List<UserAnswer> existingUserAnswers, List<Content> contents, AnswerResponse request);
+
+    List<IsCorrectResponse> checkIsCorrect(List<Content> contents, AnswerResponse request);
 }

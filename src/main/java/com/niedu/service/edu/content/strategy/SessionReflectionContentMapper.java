@@ -9,6 +9,8 @@ import com.niedu.entity.course.StepType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Slf4j
 @Component
 public class SessionReflectionContentMapper implements ContentMapperStrategy {
@@ -19,16 +21,12 @@ public class SessionReflectionContentMapper implements ContentMapperStrategy {
     }
 
     @Override
-    public ContentResponse toResponse(Step step) {
-        Content content = step.getContent();
-        if (content instanceof SessionReflection sessionReflection) {
+    public ContentResponse toResponse(Step step, List<Content> contents) {
+        Content content = contents.get(0);
+        if (content instanceof SessionReflection sessionReflection)
             return new SessionReflectionContentResponse(
                     sessionReflection.getQuestion()
             );
-        }
-        else {
-            log.warn("이 Step은 SessionReflection 타입이 아닙니다: {}", content.getClass().getSimpleName());
-            return null;
-        }
+        else throw new RuntimeException("content 조회 실패");
     }
 }

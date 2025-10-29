@@ -1,5 +1,6 @@
 package com.niedu.entity.learning_record.user_answer;
 
+import com.niedu.entity.content.Content;
 import com.niedu.entity.learning_record.StudiedStep;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -23,9 +24,13 @@ public abstract class UserAnswer {
     @Column(name = "user_answer_id")
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "studied_step", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "studied_step_id", nullable = false)
     private StudiedStep studiedStep;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "content_id", nullable = false)
+    private Content content;
 
     @Column(name = "is_correct")
     private Boolean isCorrect;

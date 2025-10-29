@@ -16,9 +16,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class SentenceCompletionAnswer extends UserAnswer {
     @Column(nullable = false)
-    private Integer questionIndex;
-
-    @Column(nullable = false)
     private String userAnswer;
 
     @Column

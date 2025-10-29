@@ -9,6 +9,8 @@ import com.niedu.entity.course.StepType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Slf4j
 @Component
 public class CurrentAffairsContentMapper implements ContentMapperStrategy{
@@ -19,19 +21,16 @@ public class CurrentAffairsContentMapper implements ContentMapperStrategy{
     }
 
     @Override
-    public ContentResponse toResponse(Step step) {
-        Content content = step.getContent();
-        if (content instanceof CurrentAffairs currentAffairs) {
+    public ContentResponse toResponse(Step step, List<Content> contents) {
+        Content content = contents.get(0);
+        if (content instanceof CurrentAffairs currentAffairs)
             return new CurrentAffairsContentResponse(
                     currentAffairs.getIssue(),
                     currentAffairs.getCause(),
                     currentAffairs.getCircumstance(),
-                    currentAffairs.getCircumstance(),
+                    currentAffairs.getResult(),
                     currentAffairs.getEffect()
             );
-        } else {
-            log.warn("이 Step은 CurrentAffairs 타입이 아닙니다: {}", content.getClass().getSimpleName());
-            return null;
-        }
+        else throw new RuntimeException("content 조회 실패");
     }
 }

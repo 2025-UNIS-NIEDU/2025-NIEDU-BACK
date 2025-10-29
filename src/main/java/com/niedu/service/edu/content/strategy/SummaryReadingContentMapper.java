@@ -9,6 +9,8 @@ import com.niedu.entity.course.StepType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Slf4j
 @Component
 public class SummaryReadingContentMapper implements ContentMapperStrategy {
@@ -19,17 +21,17 @@ public class SummaryReadingContentMapper implements ContentMapperStrategy {
     }
 
     @Override
-    public ContentResponse toResponse(Step step) {
-        Content content = step.getContent();
-        if (content instanceof SummaryReading summaryReading) {
+    public ContentResponse toResponse(Step step, List<Content> contents) {
+        if (contents == null || contents.isEmpty()) throw new RuntimeException("content 조회 실패");
+        Content content = contents.get(0);
+
+        if (content instanceof SummaryReading summaryReading)
             return new SummaryReadingContentResponse(
                     summaryReading.getSummary(),
                     summaryReading.getKeywords()
             );
-        }
         else {
-            log.warn("이 Step은 SummaryReading 타입이 아닙니다: {}", content.getClass().getSimpleName());
-            return null;
+            throw new RuntimeException("이 Step은 SummaryReading 타입이 아닙니다");
         }
     }
 }
