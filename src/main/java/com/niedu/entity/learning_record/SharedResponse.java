@@ -27,10 +27,10 @@ public class SharedResponse {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "step_id")
-    private Step step; // 세션 돌아보기 step만 연결
+    private Step step;
 
     @Column(length = 200)
-    private String userResponse; // 30자 이하로 제한은 Validation에서 처리
+    private String userResponse;
 
     private LocalDateTime createdAt;
 }
