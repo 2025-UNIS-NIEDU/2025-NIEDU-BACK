@@ -30,7 +30,6 @@ public class MyPageController {
     private final MyPageService myPageService;
     private final JwtUtil jwtUtil;
 
-    // ... (getDateNavigator, getCalendar, getReviewNotes, getAllMyTerms 메서드는 동일) ...
     @Operation(summary = "캘린더 - 날짜 내비게이터 (SET-ALL-02)")
     @GetMapping("/date-navigator")
     public ResponseEntity<ApiResponse<MyCalendarResponse>> getDateNavigator(
@@ -80,13 +79,11 @@ public class MyPageController {
 
     @Operation(summary = "용어 사전 내 특정 용어 조회 (SET-DICTIONARY-04)", description = "저장한 특정 용어 상세 조회")
     @GetMapping("/terms/{termId}")
-    // --- 반환 타입 수정 ---
     public ResponseEntity<ApiResponse<MyTermDetailResponse>> getMyTermById(
             @Parameter(hidden = true) @CookieValue(name = "accessToken") String accessToken,
             @Parameter(description = "조회할 용어 ID", required = true) @PathVariable Long termId
     ) {
         Long userId = Long.parseLong(jwtUtil.extractUsername(accessToken));
-        // --- 반환 타입 수정 ---
         MyTermDetailResponse data = myPageService.getMyTermById(userId, termId);
         return ResponseEntity.ok(ApiResponse.success(data));
     }

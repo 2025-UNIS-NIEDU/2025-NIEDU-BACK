@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Repository
 public interface SavedTermRepository extends JpaRepository<SavedTerm, Long> {
     @Modifying(clearAutomatically = true)
@@ -15,4 +17,10 @@ public interface SavedTermRepository extends JpaRepository<SavedTerm, Long> {
     long deleteByUserAndTerm(User user, Term term);
 
     boolean existsByUserAndTerm(User user, Term term);
+
+    @Transactional(readOnly = true)
+    List<SavedTerm> findByUser_IdOrderByTerm_NameAsc(Long userId);
+
+    @Transactional(readOnly = true)
+    List<SavedTerm> findByUser_IdOrderBySavedAtDesc(Long userId);
 }

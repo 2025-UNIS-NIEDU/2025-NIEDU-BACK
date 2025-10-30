@@ -1,18 +1,28 @@
 package com.niedu.service.my;
 
 import com.niedu.dto.my.*;
-import com.niedu.entity.content.Content;
-import com.niedu.entity.content.Term;
+import com.niedu.dto.course.content.KeywordContent;
+import com.niedu.dto.course.content.MultipleChoiceContentResponse;
+import com.niedu.dto.course.content.OxQuizContentResponse;
+import com.niedu.dto.course.content.SessionReflectionContentResponse;
+import com.niedu.dto.my.SentenceCompletionReviewRecord;
+import com.niedu.dto.my.ShortAnswerReviewRecord;
+import com.niedu.dto.my.SummaryReadingReviewRecord;
+import com.niedu.entity.learning_record.user_answer.SimpleAnswer;
+import com.niedu.entity.content.*;
 import com.niedu.entity.course.Session;
 import com.niedu.entity.course.Step;
 import com.niedu.entity.course.StepType;
+import com.niedu.entity.learning_record.SavedTerm;
 import com.niedu.entity.learning_record.SharedResponse;
 import com.niedu.entity.learning_record.StudiedSession;
 import com.niedu.entity.learning_record.StudiedStep;
+import com.niedu.entity.learning_record.user_answer.SentenceCompletionAnswer;
+import com.niedu.entity.learning_record.user_answer.SummaryReadingAnswer;
 import com.niedu.entity.learning_record.user_answer.UserAnswer;
 import com.niedu.entity.topic.Topic;
-import com.niedu.entity.topic.SubTopic;
 import com.niedu.entity.user.User;
+import com.niedu.repository.content.ContentRepository;
 import com.niedu.repository.content.TermRepository;
 import com.niedu.repository.learning_record.SavedTermRepository;
 import com.niedu.repository.learning_record.SharedResponseRepository;
@@ -21,6 +31,7 @@ import com.niedu.repository.learning_record.UserAnswerRepository;
 import com.niedu.repository.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +41,8 @@ import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator; // Comparator import
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,6 +50,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class MyPageService {
 
     private final UserRepository userRepository;
@@ -46,6 +59,9 @@ public class MyPageService {
     private final StudiedSessionRepository studiedSessionRepository;
     private final SharedResponseRepository sharedResponseRepository;
     private final UserAnswerRepository userAnswerRepository;
+    private final ContentRepository contentRepository;
+
+    private static final char SHORT = 0x3138;
 
     public MyCalendarResponse getDateNavigator(Long userId) {
         LocalDate now = LocalDate.now();
@@ -79,7 +95,7 @@ public class MyPageService {
             List<SharedResponse> responsesToday = responsesByDate.getOrDefault(currentDate, Collections.emptyList());
 
             for (StudiedSession ss : sessionsToday) {
-                if (coursesForThisDay.size() < 2) {
+                if (coursesForThisDay.size() < 3) {
                     Topic topic = ss.getSession().getCourse().getTopic();
                     String topicName = topic.getName();
                     String subTopicName = ss.getSession().getNewsRef().getHeadline();
@@ -90,7 +106,7 @@ public class MyPageService {
             }
 
             for (SharedResponse sr : responsesToday) {
-                if (coursesForThisDay.size() < 2) {
+                if (coursesForThisDay.size() < 3) {
                     Topic topic = sr.getStep().getSession().getCourse().getTopic();
                     String topicName = topic.getName();
                     String subTopicName = sr.getStep().getType().name();
@@ -110,10 +126,6 @@ public class MyPageService {
         return new MyCalendarResponse(year, month, days);
     }
 
-    /**
-     * 복습 노트 내 날짜별 문제 조회 (SET-REVIEW-01~03)
-     * [수정됨] 퀴즈(UserAnswer) 및 세션돌아보기(SharedResponse) 조회 로직 구현
-     */
     public List<ReviewNoteItemResponse> getReviewNotes(Long userId, LocalDate date) {
         if (date == null) {
             date = LocalDate.now();
@@ -129,23 +141,50 @@ public class MyPageService {
 
         List<ReviewNoteItemResponse> reviewNotes = new ArrayList<>();
 
-        // 3-1. UserAnswer 목록 변환
         for (UserAnswer answer : answers) {
             Content content = answer.getContent();
             StudiedStep studiedStep = answer.getStudiedStep();
             Step step = studiedStep.getStep();
             Topic topic = step.getSession().getCourse().getTopic();
-
-            // --- 수정: StepType과 Level을 Step에서 가져옴 ---
             StepType stepType = step.getType();
-            String contentType = stepType.name(); // (예: "OX_QUIZ")
+            String contentType = stepType.name();
+            String level = convertStepTypeToLevel(stepType);
 
-            // --- 수정: 헬퍼 메서드를 사용해 Level 변환 ---
-            String level = convertStepTypeToLevel(stepType); // (예: "N")
-
-            // TODO: contentType에 따라 분기하여 실제 퀴즈 DTO를 생성해야 합니다.
             Object contentDto = null;
-            // switch (contentType) { ... }
+            try {
+                switch (contentType) {
+                    case "OX_QUIZ":
+                        contentDto = OxQuizContentResponse.fromEntity((OxQuiz) content);
+                        break;
+                    case "MULTIPLE_CHOICE":
+                        contentDto = MultipleChoiceContentResponse.fromEntity((MultipleChoiceQuiz) content);
+                        break;
+                    case "SENTENCE_COMPLETION":
+                        contentDto = SentenceCompletionReviewRecord.fromEntities(
+                                (SentenceCompletionQuiz) content,
+                                (SentenceCompletionAnswer) answer
+                        );
+                        break;
+                    case "SHORT_ANSWER":
+                        contentDto = ShortAnswerReviewRecord.fromEntities(
+                                (ShortAnswerQuiz) content,
+                                (SimpleAnswer) answer
+                        );
+                        break;
+                    case "SUMMARY_READING":
+                        contentDto = SummaryReadingReviewRecord.fromEntities(
+                                (SummaryReading) content,
+                                (SummaryReadingAnswer) answer
+                        );
+                        break;
+                    default:
+                        log.warn("getReviewNotes: 처리되지 않은 퀴즈 contentType [{}] (Content ID: {})", contentType, content.getId());
+                        break;
+                }
+            } catch (ClassCastException e) {
+                log.error("Content (ID: {})와 StepType ({})이 일치하지 않습니다.", content.getId(), contentType, e);
+                continue;
+            }
 
             Long currentUserId = studiedStep.getUser().getId();
             Long currentSessionId = step.getSession().getId();
@@ -154,53 +193,109 @@ public class MyPageService {
 
             LocalDateTime createdAt = (studiedSession != null) ? studiedSession.getStartTime() : null;
 
-            if (createdAt != null) {
+            if (createdAt != null && contentDto != null) {
                 reviewNotes.add(new ReviewNoteItemResponse(topic.getName(), level, contentType, contentDto, createdAt));
             }
         }
 
-        // 3-2. SharedResponse 목록 변환
         for (SharedResponse response : responses) {
             Step step = response.getStep();
             Topic topic = step.getSession().getCourse().getTopic();
-
-            // --- 수정: StepType과 Level을 Step에서 가져옴 ---
             StepType stepType = step.getType();
-            String contentType = stepType.name(); // "SESSION_REFLECTION"
-
-            // --- 수정: 헬퍼 메서드를 사용해 Level 변환 ---
-            String level = convertStepTypeToLevel(stepType); // (예: "E")
+            String contentType = stepType.name();
+            String level = convertStepTypeToLevel(stepType);
             LocalDateTime createdAt = response.getCreatedAt();
-            Object contentDto = new SharedResponseContent(response.getUserResponse());
+
+            String reflectionQuestion = "질문을 불러올 수 없습니다.";
+            try {
+                List<Content> contents = contentRepository.findAllByStep(step);
+                if (!contents.isEmpty() && contents.get(0) instanceof SessionReflection) {
+                    reflectionQuestion = ((SessionReflection) contents.get(0)).getQuestion();
+                } else if (!contents.isEmpty()) {
+                    log.warn("StepType(SESSION_REFLECTION)과 ContentType이 일치하지 않습니다. Step ID: {}", step.getId());
+                } else {
+                    log.warn("Step(ID: {})에 연결된 SESSION_REFLECTION Content가 없습니다.", step.getId());
+                }
+            } catch (Exception e) {
+                log.error("SESSION_REFLECTION 질문을 찾는 중 오류 발생. Step ID: {}", step.getId(), e);
+            }
+            Object contentDto = new SessionReflectionContentResponse(reflectionQuestion);
 
             reviewNotes.add(new ReviewNoteItemResponse(topic.getName(), level, contentType, contentDto, createdAt));
         }
 
-        // --- 4. 두 리스트를 합쳐서 시간순으로 정렬 (최신순) ---
         reviewNotes.sort(Comparator.comparing(ReviewNoteItemResponse::createdAt).reversed());
 
         return reviewNotes;
     }
 
-    /**
-     * 용어 사전 내 전체 용어 조회 (SET-DICTIONARY-03)
-     * [구현 안 됨]
-     */
     public MyTermListResponse getAllMyTerms(Long userId, String sort) {
-        // --- 구현 안 됨 ---
+
         List<TermGroupRecord> groups = new ArrayList<>();
+
         if ("alphabetical".equals(sort)) {
-            // TODO: 로직 구현 (SavedTermRepository에서 가나다순 조회 -> 초성 그룹핑)
+            List<SavedTerm> savedTerms = savedTermRepository.findByUser_IdOrderByTerm_NameAsc(userId);
+
+            List<TermItemRecord> termItems = savedTerms.stream()
+                    .map(st -> new TermItemRecord(st.getTerm().getId(), st.getTerm().getName()))
+                    .toList();
+
+            Map<String, List<TermItemRecord>> groupedByInitial = termItems.stream()
+                    .collect(Collectors.groupingBy(
+                            item -> getInitial(item.term()),
+                            LinkedHashMap::new,
+                            Collectors.toList()
+                    ));
+
+            groups = groupedByInitial.entrySet().stream()
+                    .map(entry -> TermGroupRecord.forAlphabetical(entry.getKey(), entry.getValue()))
+                    .toList();
+
         } else { // "recent"
-            // TODO: 로M: 로직 구현 (SavedTermRepository에서 최신순 조회 -> 날짜(오늘/어제/7일) 그룹핑)
+            List<SavedTerm> savedTerms = savedTermRepository.findByUser_IdOrderBySavedAtDesc(userId);
+
+            LocalDate today = LocalDate.now();
+            LocalDate yesterday = today.minusDays(1);
+            LocalDate sevenDaysAgo = today.minusDays(7);
+
+            List<TermItemRecord> todayTerms = new ArrayList<>();
+            List<TermItemRecord> yesterdayTerms = new ArrayList<>();
+            List<TermItemRecord> last7DaysTerms = new ArrayList<>();
+            List<TermItemRecord> otherTerms = new ArrayList<>();
+
+            for (SavedTerm st : savedTerms) {
+                if (st.getSavedAt() == null) continue;
+                LocalDate savedDate = st.getSavedAt().toLocalDate();
+                TermItemRecord item = new TermItemRecord(st.getTerm().getId(), st.getTerm().getName());
+
+                if (savedDate.isEqual(today)) {
+                    todayTerms.add(item);
+                } else if (savedDate.isEqual(yesterday)) {
+                    yesterdayTerms.add(item);
+                } else if (savedDate.isAfter(sevenDaysAgo) && savedDate.isBefore(yesterday)) {
+                    last7DaysTerms.add(item);
+                } else {
+                    otherTerms.add(item);
+                }
+            }
+
+            if (!todayTerms.isEmpty()) {
+                groups.add(TermGroupRecord.forRecent("오늘", todayTerms));
+            }
+            if (!yesterdayTerms.isEmpty()) {
+                groups.add(TermGroupRecord.forRecent("어제", yesterdayTerms));
+            }
+            if (!last7DaysTerms.isEmpty()) {
+                groups.add(TermGroupRecord.forRecent("최근 7일", last7DaysTerms));
+            }
+            if (!otherTerms.isEmpty()) {
+                groups.add(TermGroupRecord.forRecent("그 외", otherTerms));
+            }
         }
+
         return new MyTermListResponse(groups);
     }
 
-    /**
-     * 용어 사전 내 특정 용어 조회 (SET-DICTIONARY-04)
-     * [구현 완료]
-     */
     public MyTermDetailResponse getMyTermById(Long userId, Long termId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
@@ -210,5 +305,51 @@ public class MyPageService {
             throw new EntityNotFoundException("사용자가 저장한 용어사전에서 해당 용어를 찾을 수 없습니다.");
         }
         return MyTermDetailResponse.fromEntity(term);
+    }
+
+    private String convertStepTypeToLevel(StepType type) {
+        if (type == null) {
+            return "N";
+        }
+
+        switch (type) {
+            case OX_QUIZ:
+            case TERM_LEARNING:
+            case CURRENT_AFFAIRS:
+                return "N";
+
+            case MULTIPLE_CHOICE:
+            case ARTICLE_READING:
+            case SHORT_ANSWER:
+            case SUMMARY_READING:
+                return "I";
+
+            case SESSION_REFLECTION:
+            case SENTENCE_COMPLETION:
+                return "E";
+
+            default:
+                return "N";
+        }
+    }
+
+    private String getInitial(String text) {
+        if (text == null || text.isEmpty()) {
+            return "?";
+        }
+        char firstChar = text.charAt(0);
+
+        if (firstChar >= '가' && firstChar <= '힣') {
+            final char[] initials = {
+                    'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', SHORT,
+                    'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'
+            };
+            int index = (firstChar - '가') / (21 * 28);
+            return String.valueOf(initials[index]);
+        }
+        if ((firstChar >= 'A' && firstChar <= 'Z') || (firstChar >= 'a' && firstChar <= 'z')) {
+            return String.valueOf(Character.toUpperCase(firstChar));
+        }
+        return "#";
     }
 }

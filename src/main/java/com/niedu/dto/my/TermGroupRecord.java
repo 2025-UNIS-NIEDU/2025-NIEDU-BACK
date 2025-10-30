@@ -1,11 +1,11 @@
-package com.niedu.dto.my; // 패키지명 확인
+package com.niedu.dto.my;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 @Schema(description = "용어 사전 그룹")
-@JsonInclude(JsonInclude.Include.NON_NULL) // Null이 아닌 필드만 JSON에 포함
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record TermGroupRecord(
         @Schema(description = "초성 (가나다순 정렬 시)")
         String initial,
