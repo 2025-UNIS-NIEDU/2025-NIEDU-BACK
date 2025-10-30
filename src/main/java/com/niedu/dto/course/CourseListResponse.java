@@ -3,7 +3,7 @@ package com.niedu.dto.course;
 public record CourseListResponse (
     String title,
     String thumbnailUrl,
-    String longDescription,
+    String description,
     String topic,
     String subTopic
 ) {}

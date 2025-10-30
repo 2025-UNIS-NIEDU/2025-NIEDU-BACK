@@ -6,5 +6,5 @@ public record CourseResponse (
         String title,
         String topic,
         Float progress,
-        String longDescription
+        String description
 ){}
