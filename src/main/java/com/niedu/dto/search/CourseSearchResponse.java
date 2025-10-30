@@ -30,7 +30,7 @@ public record CourseSearchResponse(
                 course.getThumbnailUrl(),
                 course.getTitle(),
                 fetchedTags,
-                course.getShortDescription()
+                course.getDescription()
         );
     }
 

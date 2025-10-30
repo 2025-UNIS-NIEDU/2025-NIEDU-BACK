@@ -2,6 +2,8 @@ package com.niedu.dto.home;
 
 import com.niedu.entity.course.Course;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.data.domain.Page;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +23,7 @@ public class HomeCourseRecord {
             return new CourseInfo(
                     course.getThumbnailUrl(),
                     course.getTitle(),
-                    course.getLongDescription(),
+                    course.getDescription(),
                     course.getTopic() != null ? course.getTopic().getName() : null // Topic 엔티티에서 이름 가져오기
             );
         }
@@ -31,7 +33,7 @@ public class HomeCourseRecord {
     public record CourseListResponse(
             List<CourseInfo> courses
     ) {
-        public static CourseListResponse fromEntities(List<Course> courses) {
+        public static CourseListResponse fromEntities(Page<Course> courses) {
             List<CourseInfo> courseInfos = courses.stream()
                     .map(CourseInfo::fromEntity)
                     .collect(Collectors.toList());
