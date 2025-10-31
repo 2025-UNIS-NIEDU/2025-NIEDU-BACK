@@ -17,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "2. 홈 (Home)", description = "홈 화면 관련 API")
 @RestController
 @RequestMapping("/api/home")
@@ -34,10 +36,10 @@ public class HomeController {
     ) {
         User user = authService.getUserFromRequest(httpServletRequest);
 
-        HomeNewsRecord data = homeService.getRandomNews(user);
+        List<HomeNewsRecord> responses = homeService.getRandomNews(user);
 
-        return (data != null) ?
-                ResponseEntity.ok(ApiResponse.success(data)) :
+        return (responses != null) ?
+                ResponseEntity.ok(ApiResponse.success(responses)) :
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "오늘자 뉴스 조회에 실패했습니다."));
     }
 
@@ -52,10 +54,10 @@ public class HomeController {
     ) {
         User user = authService.getUserFromRequest(httpServletRequest);
 
-        HomeCourseRecord.CourseListResponse data = homeService.getCourses(user, type, view);
+        List<HomeCourseRecord> responses = homeService.getCourses(user, type, view);
 
-        return (data != null) ?
-                ResponseEntity.ok(ApiResponse.success(data)) :
+        return (responses != null) ?
+                ResponseEntity.ok(ApiResponse.success(responses)) :
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "홈 코스 조회에 실패했습니다."));
     }
 }
