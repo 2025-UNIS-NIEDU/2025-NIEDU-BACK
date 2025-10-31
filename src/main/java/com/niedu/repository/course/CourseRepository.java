@@ -54,15 +54,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
 
     Page<Course> findAllByOrderByCreatedAtDesc(Pageable pageable);
-
-    @Query("""
-        SELECT sc.course
-        FROM SavedCourse sc
-        WHERE sc.user.id = :userId
-        ORDER BY sc.course.createdAt DESC 
-        """)
-    List<Course> findSavedCoursesByUserId(@Param("userId") Long userId, Pageable pageable);
-
     Page<Course> findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(String keyword, Pageable pageable);
     Page<Course> findByTitleContainingIgnoreCaseOrderByViewCountDesc(String keyword, Pageable pageable);
 }

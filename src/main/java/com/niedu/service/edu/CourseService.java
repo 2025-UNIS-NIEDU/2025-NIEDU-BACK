@@ -47,7 +47,7 @@ public class CourseService {
                 course.getTitle(),
                 course.getTopic().getName(),
                 studiedCourseRepository.findByUser_IdAndCourse_Id(user.getId(), course.getId()).getProgress(),
-                course.getLongDescription()
+                course.getDescription()
         );
     }
 
@@ -73,7 +73,7 @@ public class CourseService {
                         .map(course -> new CourseListResponse(
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
-                                course.getLongDescription(),
+                                course.getDescription(),
                                 course.getTopic().getName(),
                                 courseSubTopicRepository.findFirstByCourse_Id(course.getId()).getSubTopic().getName()
                         ))
@@ -107,7 +107,7 @@ public class CourseService {
                         .map(course -> new CourseListResponse(
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
-                                course.getLongDescription(),
+                                course.getDescription(),
                                 course.getTopic().getName(),
                                 courseSubTopicRepository.findFirstByCourse_Id(course.getId()).getSubTopic().getName()
                         ))
@@ -141,7 +141,7 @@ public class CourseService {
                         .map(course -> new CourseListResponse(
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
-                                course.getLongDescription(),
+                                course.getDescription(),
                                 course.getTopic().getName(),
                                 courseSubTopicRepository.findFirstByCourse_Id(course.getId()).getSubTopic().getName()
                         ))
@@ -177,7 +177,7 @@ public class CourseService {
                         .map(course -> new CourseListResponse(
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
-                                course.getLongDescription(),
+                                course.getDescription(),
                                 course.getTopic().getName(),
                                 courseSubTopicRepository.findFirstByCourse_Id(course.getId()).getSubTopic().getName()
                         ))
