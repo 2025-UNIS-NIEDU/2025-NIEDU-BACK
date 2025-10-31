@@ -7,7 +7,9 @@ import com.niedu.entity.course.Course;
 import com.niedu.entity.user.User;
 import com.niedu.repository.content.NewsRefRepository;
 import com.niedu.repository.course.CourseRepository;
+import com.niedu.repository.learning_record.SavedCourseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,35 +24,37 @@ public class HomeService {
 
     private final NewsRefRepository newsRefRepository;
     private final CourseRepository courseRepository;
+    private final SavedCourseRepository savedCourseRepository;
 
-    public HomeNewsRecord getRandomNews(User user) {
-        PageRequest pageable = PageRequest.of(0, 1);
-        List<NewsRef> newsList = newsRefRepository.findAllByOrderByIdDesc(pageable);
+    public List<HomeNewsRecord> getRandomNews(User user) {
+        List<NewsRef> newsRefs = newsRefRepository.findTwoRandomFromLatestDate();
 
-        if (newsList.isEmpty()) {
-            return new HomeNewsRecord("","뉴스가 없습니다.","","");
-        }
+        List<HomeNewsRecord> responses = newsRefs.stream()
+                .map(HomeNewsRecord::fromEntity)
+                .toList();
 
-        NewsRef news = newsList.get(0);
-        return HomeNewsRecord.fromEntity(news);
+        if (responses == null || responses.isEmpty())
+            throw new RuntimeException("최신 뉴스가 없습니다.");
+
+        return responses;
     }
 
-    public HomeCourseRecord.CourseListResponse getCourses(User user, String type, String view) {
+    public List<HomeCourseRecord> getCourses(User user, String type, String view) {
         int limit = "preview".equalsIgnoreCase(view) ? 6 : 10;
         Pageable pageable = PageRequest.of(0, limit);
 
-        Long userId = user.getId();
-
-        List<Course> courses;
+        Page<Course> courses;
 
         if ("recent".equalsIgnoreCase(type)) {
             courses = courseRepository.findAllByOrderByCreatedAtDesc(pageable);
         } else if ("saved".equalsIgnoreCase(type)) {
-            courses = courseRepository.findSavedCoursesByUserId(userId, pageable);
+            courses = savedCourseRepository.findByUserOrderByCourse_CreatedAtDesc(user, pageable);
         } else {
-            throw new IllegalArgumentException("Invalid type parameter: " + type);
+            throw new IllegalArgumentException("타입 파라미터 오류: " + type);
         }
 
-        return HomeCourseRecord.CourseListResponse.fromEntities(courses);
+        return courses.stream()
+                .map(HomeCourseRecord::fromEntity)
+                .toList();
     }
 }
