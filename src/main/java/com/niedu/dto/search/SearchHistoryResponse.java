@@ -23,10 +23,4 @@ public record SearchHistoryResponse(
                 searchLog.getSearchedAt()
         );
     }
-
-    public static List<SearchHistoryResponse> fromEntities(List<SearchLog> searchLogs) {
-        return searchLogs.stream()
-                .map(SearchHistoryResponse::fromEntity)
-                .collect(Collectors.toList());
-    }
 }
