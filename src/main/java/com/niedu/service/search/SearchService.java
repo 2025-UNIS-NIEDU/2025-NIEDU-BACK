@@ -27,26 +27,27 @@ public class SearchService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
 
-    public List<SearchHistoryResponse> getSearchHistory(Long userId) {
+    public List<SearchHistoryResponse> getSearchHistory(User user) {
         Pageable pageable = PageRequest.of(0, 10);
-        List<SearchLog> logs = searchLogRepository.findByUser_IdOrderBySearchedAtDesc(userId, pageable);
-        return SearchHistoryResponse.fromEntities(logs);
+        Page<SearchLog> logs = searchLogRepository.findByUserOrderBySearchedAtDesc(user, pageable);
+
+        return logs.stream()
+                .map(SearchHistoryResponse::fromEntity)
+                .toList();
     }
 
     @Transactional
-    public void deleteSearchHistory(Long userId, Long logId) {
-        searchLogRepository.deleteByLogIdAndUser_Id(logId, userId);
+    public void deleteSearchHistory(Long logId) {
+        searchLogRepository.deleteById(logId);
     }
 
-    public List<String> getSearchSuggestions(Long userId) {
+    public List<String> getSearchSuggestions() {
         Pageable topFive = PageRequest.of(0, 5);
         return searchLogRepository.findPopularKeywords(topFive);
     }
 
     @Transactional
-    public Page<CourseSearchResponse> searchCourses(Long userId, String keyword, String sort, int page, int size) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+    public List<CourseSearchResponse> searchCourses(User user, String keyword, String sort, int page, int size) {
         SearchLog searchLog = new SearchLog(user, keyword);
         searchLogRepository.save(searchLog);
 
@@ -62,6 +63,8 @@ public class SearchService {
             throw new IllegalArgumentException("Invalid sort parameter: " + sort);
         }
 
-        return courses.map(CourseSearchResponse::fromEntity);
+        return courses.stream()
+                .map(CourseSearchResponse::fromEntity)
+                .toList();
     }
 }
