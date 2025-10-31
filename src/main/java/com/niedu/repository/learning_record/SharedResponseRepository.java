@@ -1,4 +1,4 @@
-package com.niedu.repository.learning_record;
+package com.niedu.repository.learning_record; // (패키지 경로는 기존과 동일하게)
 
 import com.niedu.entity.course.Step;
 import com.niedu.entity.learning_record.SharedResponse;
@@ -14,5 +14,5 @@ public interface SharedResponseRepository extends JpaRepository<SharedResponse, 
 
     List<SharedResponse> findAllByStepAndUserNot(Step step, User user);
 
-    List<SharedResponse> findByUserIdAndCreatedAtBetween(Long userId, LocalDateTime start, LocalDateTime end);
+    List<SharedResponse> findByUserAndCreatedAtBetween(User user, LocalDateTime start, LocalDateTime end);
 }

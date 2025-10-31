@@ -19,8 +19,8 @@ public interface SavedTermRepository extends JpaRepository<SavedTerm, Long> {
     boolean existsByUserAndTerm(User user, Term term);
 
     @Transactional(readOnly = true)
-    List<SavedTerm> findByUser_IdOrderByTerm_NameAsc(Long userId);
+    List<SavedTerm> findByUserOrderByTerm_NameAsc(User user);
 
     @Transactional(readOnly = true)
-    List<SavedTerm> findByUser_IdOrderBySavedAtDesc(Long userId);
+    List<SavedTerm> findByUserOrderBySavedAtDesc(User user);
 }

@@ -1,8 +1,6 @@
 package com.niedu.dto.course.content;
 
 import com.niedu.entity.content.MultipleChoiceQuiz;
-import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.ArrayList;
 import java.util.List;
 
 public record MultipleChoiceContentResponse (
@@ -11,7 +9,8 @@ public record MultipleChoiceContentResponse (
         List<MultipleChoiceOptionContent> options,
         String correctAnswer,
         String answerExplanation
-) {
+) implements ContentResponse {
+
     public static MultipleChoiceContentResponse fromEntity(MultipleChoiceQuiz entity) {
         List<MultipleChoiceOptionContent> optionsList = List.of(
                 new MultipleChoiceOptionContent("A", entity.getOptionA()),
