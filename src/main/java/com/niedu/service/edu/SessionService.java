@@ -52,7 +52,7 @@ public class SessionService {
 
     public SessionStartResponse startSession(User user, Long sessionId, LevelRequest request) {
         // 학습 이력 존재 여부를 바탕으로 StudiedSession 생성/업데이트
-        StudiedSession sessionLog = studiedSessionRepository.findByUser_IdAndSession_Id(user.getId(), sessionId);
+        StudiedSession sessionLog = studiedSessionRepository.findByUserAndSession_Id(user, sessionId);
         if (sessionLog == null) { // 처음 학습하는 경우
             // 1. StudiedSession 초기화
             sessionLog = StudiedSession.builder()
@@ -135,7 +135,7 @@ public class SessionService {
 
     public void quitSession(User user, Long sessionId) {
         // 1. 진행률 확인
-        StudiedSession studiedSession = studiedSessionRepository.findByUser_IdAndSession_Id(user.getId(), sessionId);
+        StudiedSession studiedSession = studiedSessionRepository.findByUserAndSession_Id(user, sessionId);
         List<StudiedStep> studiedSteps = studiedStepRepository.findAllByUser_IdAndStep_Session_Id(user.getId(), sessionId);
         long completedCount = studiedSteps.stream()
                 .filter(StudiedStep::getIsCompleted)
@@ -154,7 +154,7 @@ public class SessionService {
         // 1. streak 조회
         int streak = attendanceService.calculateStreak(user.getId());
         // 2. learningTime 조회
-        StudiedSession studiedSession = studiedSessionRepository.findByUser_IdAndSession_Id(user.getId(), sessionId);
+        StudiedSession studiedSession = studiedSessionRepository.findByUserAndSession_Id(user, sessionId);
         Duration learningTime = studiedSession.getStudiedTime();
         // 3. 리턴
         return new SessionSummaryResponse(streak, learningTime);
