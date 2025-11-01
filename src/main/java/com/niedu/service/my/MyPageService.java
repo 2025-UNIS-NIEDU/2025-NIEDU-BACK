@@ -51,8 +51,6 @@ public class MyPageService {
     private final UserAnswerRepository userAnswerRepository;
     private final ContentRepository contentRepository;
 
-    private static final char SHORT = 'ㅅ';
-
 
     public MyCalendarResponse getDateNavigator(User user) {
         LocalDate now = LocalDate.now();
@@ -362,7 +360,7 @@ public class MyPageService {
 
         if (firstChar >= '가' && firstChar <= '힣') {
             final char[] initials = {
-                    'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', SHORT,
+                    'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ',
                     'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'
             };
 
@@ -371,6 +369,7 @@ public class MyPageService {
             int index = (firstChar - '가') / (21 * 28);
             return String.valueOf(initials[index]);
         }
+
 
         if ((firstChar >= 'A' && firstChar <= 'Z') || (firstChar >= 'a' && firstChar <= 'z')) {
             return String.valueOf(Character.toUpperCase(firstChar));
