@@ -1,5 +1,6 @@
 package com.niedu.service.edu.content.strategy;
 
+import com.niedu.dto.course.ai.AIStepResponse;
 import com.niedu.dto.course.content.ContentResponse;
 import com.niedu.dto.course.content.CurrentAffairsContentResponse;
 import com.niedu.entity.content.Content;
@@ -32,5 +33,23 @@ public class CurrentAffairsContentMapper implements ContentMapperStrategy{
                     currentAffairs.getEffect()
             );
         else throw new RuntimeException("content 조회 실패");
+    }
+
+    @Override
+    public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
+        return stepResponse.contents().stream()
+                .filter(c -> c instanceof CurrentAffairsContentResponse)
+                .map(c -> (CurrentAffairsContentResponse) c)
+                .map(content -> CurrentAffairs.builder()
+                        .step(step)
+                        .issue(content.issue())
+                        .cause(content.cause())
+                        .circumstance(content.circumstance())
+                        .result(content.result())
+                        .effect(content.effect())
+                        .build()
+                )
+                .map(currentAffairs -> (Content) currentAffairs)
+                .toList();
     }
 }

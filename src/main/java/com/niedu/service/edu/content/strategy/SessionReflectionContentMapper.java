@@ -1,5 +1,6 @@
 package com.niedu.service.edu.content.strategy;
 
+import com.niedu.dto.course.ai.AIStepResponse;
 import com.niedu.dto.course.content.ContentResponse;
 import com.niedu.dto.course.content.SessionReflectionContentResponse;
 import com.niedu.entity.content.Content;
@@ -28,5 +29,18 @@ public class SessionReflectionContentMapper implements ContentMapperStrategy {
                     sessionReflection.getQuestion()
             );
         else throw new RuntimeException("content 조회 실패");
+    }
+
+    @Override
+    public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
+        return stepResponse.contents().stream()
+                .filter(c -> c instanceof SessionReflectionContentResponse)
+                .map(c -> (SessionReflectionContentResponse) c)
+                .map(content -> SessionReflection.builder()
+                        .step(step)
+                        .question(content.question())
+                        .build())
+                .map(sessionReflection -> (Content) sessionReflection)
+                .toList();
     }
 }

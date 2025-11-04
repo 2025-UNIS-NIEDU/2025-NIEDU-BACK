@@ -1,5 +1,6 @@
 package com.niedu.service.edu.content.strategy;
 
+import com.niedu.dto.course.ai.AIStepResponse;
 import com.niedu.dto.course.content.ContentResponse;
 import com.niedu.dto.course.content.SummaryReadingContentResponse;
 import com.niedu.entity.content.Content;
@@ -33,5 +34,22 @@ public class SummaryReadingContentMapper implements ContentMapperStrategy {
         else {
             throw new RuntimeException("이 Step은 SummaryReading 타입이 아닙니다");
         }
+    }
+
+    @Override
+    public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
+        return stepResponse.contents().stream()
+                .filter(c -> c instanceof SummaryReadingContentResponse)
+                .map(c -> (SummaryReadingContentResponse) c)
+                .map(content -> {
+                    SummaryReading summaryReading = SummaryReading.builder()
+                            .step(step)
+                            .summary(content.summary())
+                            .build();
+                    summaryReading.setKeywords(content.keywords());
+                    return summaryReading;
+                })
+                .map(summaryReading -> (Content) summaryReading)
+                .toList();
     }
 }

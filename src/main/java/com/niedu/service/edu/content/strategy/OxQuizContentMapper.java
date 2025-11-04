@@ -1,5 +1,6 @@
 package com.niedu.service.edu.content.strategy;
 
+import com.niedu.dto.course.ai.AIStepResponse;
 import com.niedu.dto.course.content.ContentResponse;
 import com.niedu.dto.course.content.OxQuizContentListResponse;
 import com.niedu.dto.course.content.OxQuizContentResponse;
@@ -41,5 +42,20 @@ public class OxQuizContentMapper implements ContentMapperStrategy{
                 step.getSession().getNewsRef().getSourceUrl(),
                 oxQuizContentResponses
         );
+    }
+
+    @Override
+    public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
+        return stepResponse.contents().stream()
+                .filter(c -> c instanceof OxQuizContentResponse)
+                .map(c -> (OxQuizContentResponse) c)
+                .map(content -> OxQuiz.builder()
+                        .step(step)
+                        .question(content.question())
+                        .correctAnswer(content.correctAnswer())
+                        .answerExplanation(content.answerExplanation())
+                        .build())
+                .map(oxQuiz -> (Content) oxQuiz)
+                .toList();
     }
 }

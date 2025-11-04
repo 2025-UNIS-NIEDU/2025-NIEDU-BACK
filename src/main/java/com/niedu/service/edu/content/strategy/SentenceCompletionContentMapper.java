@@ -1,5 +1,6 @@
 package com.niedu.service.edu.content.strategy;
 
+import com.niedu.dto.course.ai.AIStepResponse;
 import com.niedu.dto.course.content.ContentResponse;
 import com.niedu.dto.course.content.SentenceCompletionContentListResponse;
 import com.niedu.dto.course.content.SentenceCompletionContentResponse;
@@ -37,5 +38,18 @@ public class SentenceCompletionContentMapper implements ContentMapperStrategy {
                 ))
                 .toList();
         return new SentenceCompletionContentListResponse(sentenceCompletionContentResponses);
+    }
+
+    @Override
+    public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
+        return stepResponse.contents().stream()
+                .filter(c -> c instanceof SentenceCompletionContentResponse)
+                .map(c -> (SentenceCompletionContentResponse) c)
+                .map(content -> SentenceCompletionQuiz.builder()
+                        .step(step)
+                        .question(content.question())
+                        .build())
+                .map(sentenceCompletionQuiz -> (Content) sentenceCompletionQuiz)
+                .toList();
     }
 }

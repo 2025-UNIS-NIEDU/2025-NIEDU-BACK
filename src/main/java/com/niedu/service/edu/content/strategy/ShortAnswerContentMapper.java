@@ -1,5 +1,6 @@
 package com.niedu.service.edu.content.strategy;
 
+import com.niedu.dto.course.ai.AIStepResponse;
 import com.niedu.dto.course.content.ContentResponse;
 import com.niedu.dto.course.content.ShortAnswerContentListResponse;
 import com.niedu.dto.course.content.ShortAnswerContentResponse;
@@ -41,5 +42,20 @@ public class ShortAnswerContentMapper implements ContentMapperStrategy{
                 step.getSession().getNewsRef().getSourceUrl(),
                 shortAnswerContentResponses
         );
+    }
+
+    @Override
+    public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
+        return stepResponse.contents().stream()
+                .filter(c -> c instanceof ShortAnswerContentResponse)
+                .map(c -> (ShortAnswerContentResponse) c)
+                .map(content -> ShortAnswerQuiz.builder()
+                        .step(step)
+                        .question(content.question())
+                        .correctAnswer(content.correctAnswer())
+                        .answerExplanation(content.answerExplanation())
+                        .build())
+                .map(shortAnswerQuiz -> (Content) shortAnswerQuiz)
+                .toList();
     }
 }
