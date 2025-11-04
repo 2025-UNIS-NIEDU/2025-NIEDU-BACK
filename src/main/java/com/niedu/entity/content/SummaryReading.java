@@ -11,6 +11,7 @@ import jakarta.persistence.Lob;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @DiscriminatorValue("SUMMARY")
+@SuperBuilder
 public class SummaryReading extends Content {
     @Lob
     @Column(nullable = false)

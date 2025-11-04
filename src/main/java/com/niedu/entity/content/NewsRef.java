@@ -1,9 +1,7 @@
 package com.niedu.entity.content;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -11,15 +9,14 @@ import java.time.LocalDate;
 @Table(name = "news_ref")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class NewsRef {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "news_ref_id")
     private Long id;
-
-    @Column(name = "rag_uuid", unique = true, nullable = false)
-    private String ragUuid;
 
     @Column(nullable = false)
     private String headline;

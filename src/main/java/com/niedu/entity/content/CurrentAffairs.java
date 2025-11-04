@@ -6,12 +6,14 @@ import jakarta.persistence.Entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @DiscriminatorValue("CURRENT")
+@SuperBuilder
 public class CurrentAffairs extends Content {
     @Column(nullable = false)
     private String issue;
