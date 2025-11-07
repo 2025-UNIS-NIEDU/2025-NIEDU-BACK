@@ -12,9 +12,6 @@ public record SentenceCompletionReviewRecord(
         @Schema(description = "질문")
         String question,
 
-        @Schema(description = "질문 인덱스 (1, 2, 3)")
-        Integer questionIndex,
-
         @Schema(description = "사용자 답변")
         String userAnswer,
 
@@ -32,7 +29,6 @@ public record SentenceCompletionReviewRecord(
         return new SentenceCompletionReviewRecord(
                 content.getId(),
                 content.getQuestion(),
-                content.getQuestionIndex(),
                 answer.getUserAnswer(),
                 answer.getAIScore(),
                 answer.getAIFeedback()
