@@ -81,7 +81,7 @@ public class StepController {
                                                                 @PathVariable("stepId") Long stepId,
                                                                 @RequestBody ReportFeedbackRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);
-        AIErrorReport aiErrorReport = stepService.reportErrorInFeedback(user, stepId, request);
+        AIErrorReport aiErrorReport = stepService.reportErrorInFeedback(user, stepId, request.contentId());
         return (aiErrorReport != null)?
                 ResponseEntity.ok(ApiResponse.success(null)):
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "AI 에러 제보에 실패했습니다."));

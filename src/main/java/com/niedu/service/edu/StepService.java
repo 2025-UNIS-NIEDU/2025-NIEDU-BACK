@@ -67,12 +67,12 @@ public class StepService {
         return response;
     }
 
-    public AIErrorReport reportErrorInFeedback(User user, Long stepId, ReportFeedbackRequest request) {
+    public AIErrorReport reportErrorInFeedback(User user, Long stepId, Long contentId) {
         StudiedStep studiedStep = studiedStepRepository.findByUserAndStep_Id(user, stepId);
         AIErrorReport aiErrorReport = new AIErrorReport(
                 null,
                 studiedStep.getStep(),
-                request.questionNum());
+                contentId);
         AIErrorReport saved = aiErrorReportRepository.save(aiErrorReport);
         return saved;
     }
