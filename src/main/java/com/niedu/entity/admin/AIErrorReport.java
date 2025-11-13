@@ -21,6 +21,6 @@ public class AIErrorReport {
     @JoinColumn(name = "step_id", nullable = false)
     private Step step;
 
-    @Column(nullable = false)
-    private Integer questionNum;
+    @Column(name = "content_id", nullable = false)
+    private Long contentId;
 }
