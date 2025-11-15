@@ -5,16 +5,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.niedu.dto.course.FeedbackAnswerRequest;
 import com.niedu.dto.course.FeedbackAnswerResponse;
-import com.niedu.dto.course.ai.AICourseListResponse;
-import com.niedu.dto.course.ai.AICourseResponse;
-import com.niedu.dto.course.ai.AISessionResponse;
-import com.niedu.dto.course.ai.AIStepResponse;
-import com.niedu.dto.course.content.ContentResponse;
-import com.niedu.dto.course.content.TermContent;
-import com.niedu.dto.course.content.TermLearningContentResponse;
+import com.niedu.dto.course.ai.*;
 import com.niedu.entity.content.Content;
 import com.niedu.entity.content.NewsRef;
-import com.niedu.entity.content.Term;
 import com.niedu.entity.course.*;
 import com.niedu.entity.topic.SubTopic;
 import com.niedu.entity.topic.Topic;
@@ -40,6 +33,8 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -99,7 +94,7 @@ public class AIService {
     }
 
     public void syncAIData() {
-        String url = aiServerUrl + "/api/build";
+        String url = aiServerUrl + "/api/course/today";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -141,7 +136,7 @@ public class AIService {
     private void saveCourseWithRelations(AICourseResponse courseResponse) {
         // 1. Topic/SubTopic 존재 확인 or 생성
         Topic topic = topicRepository.findByName(courseResponse.topic());
-        SubTopic subTopic = subTopicRepository.findByName(courseResponse.subtopic());
+        SubTopic subTopic = subTopicRepository.findByName(courseResponse.subTopic());
 
         // 2. Course 생성 및 저장
         Course course = courseRepository.save(Course.builder()
@@ -171,7 +166,8 @@ public class AIService {
     }
 
     private void saveSessionWithChildren(Course course, AISessionResponse sessionResponse) {
-        // 1. NewsRef 생성
+
+        // 1. NewsRef 저장
         NewsRef newsRef = newsRefRepository.save(NewsRef.builder()
                 .headline(sessionResponse.headline())
                 .publisher(sessionResponse.publisher())
@@ -180,26 +176,31 @@ public class AIService {
                 .sourceUrl(sessionResponse.sourceUrl())
                 .build());
 
-        // 2. Session 생성
+        // 2. Session 저장
         Session session = sessionRepository.save(Session.builder()
                 .course(course)
                 .newsRef(newsRef)
                 .build());
 
-        // 3. Steps 저장
-        sessionResponse.quizzes().forEach(quizResponse -> {
-            quizResponse.steps().forEach(stepResponse -> {
-                saveStepWithContents(session, stepResponse);
-            });
-        });
+        // 3. NPE-safe quizzes
+        List<AIQuizResponse> quizzes = sessionResponse.quizzes();
+        if (quizzes == null || quizzes.isEmpty()) {
+            log.warn("Session({}) has NO quizzes. Skipping...", session.getId());
+            return;
+        }
 
-        // 4. TermLearning 단계일 경우 Terms 저장
-        sessionResponse.quizzes().stream()
-                .flatMap(q -> q.steps().stream())
-                .filter(s -> s.contentType().equals(StepType.TERM_LEARNING))
-                .forEach(stepResponse ->
-                        saveTerms(session, stepResponse)
-                );
+        for (AIQuizResponse quiz : quizzes) {
+
+            List<AIStepResponse> steps = quiz.steps();
+            if (steps == null || steps.isEmpty()) {
+                log.warn("Quiz in session({}) has NO steps. Skipping...", session.getId());
+                continue;
+            }
+
+            for (AIStepResponse stepResponse : steps) {
+                saveStepWithContents(session, stepResponse);
+            }
+        }
     }
 
     private void saveStepWithContents(Session session, AIStepResponse stepResponse) {
@@ -209,26 +210,50 @@ public class AIService {
                 .type(stepResponse.contentType())
                 .build());
 
-        List<Content> contents = stepMapperService.toEntities(step, stepResponse);
+        // normalize 적용
+        List<Object> rawContents = stepResponse.contents();
+        if (rawContents == null) rawContents = List.of();
+
+        List<Object> normalizedContents = rawContents.stream()
+                .map(this::normalize)   // Map<String,Object> 로 강제 맞춤
+                .filter(Objects::nonNull)
+                .map(c -> (Object) c)
+                .toList();
+
+        // stepResponse의 contents를 정상화된 값으로 교체
+        AIStepResponse safeStep = new AIStepResponse(
+                stepResponse.stepOrder(),
+                stepResponse.contentType(),
+                normalizedContents
+        );
+
+        List<Content> contents = stepMapperService.toEntities(step, safeStep);
+
         if (contents != null)
             contentRepository.saveAll(contents);
     }
 
-    private void saveTerms(Session session, AIStepResponse stepResponse) {
-        List<ContentResponse> contents = stepResponse.contents();
-        contents.stream()
-                .filter(contentResponse -> contentResponse instanceof TermLearningContentResponse)
-                .map(contentResponse -> (TermLearningContentResponse) contentResponse)
-                .forEach(termLearningContentResponse -> {
-                    termLearningContentResponse.terms().forEach(termContent -> {
-                        termRepository.save(Term.builder()
-                                .name(termContent.name())
-                                .session(session)
-                                .definition(termContent.definition())
-                                .exampleSentence(termContent.exampleSentence())
-                                .additionalExplanation(termContent.additionalExplanation())
-                                .build());
-                    });
-                });
+    private Map<String, Object> normalize(Object obj) {
+
+        // 1) Map 이면 바로 변환
+        if (obj instanceof Map<?, ?> raw) {
+            return raw.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            e -> String.valueOf(e.getKey()),
+                            Map.Entry::getValue
+                    ));
+        }
+
+        // 2) List 이면 내부 Map 찾아서 변환
+        if (obj instanceof List<?> list) {
+            return list.stream()
+                    .filter(item -> item instanceof Map<?, ?>)
+                    .findFirst()
+                    .map(this::normalize)
+                    .orElse(null);
+        }
+
+        // 3) 그 외 타입은 무시
+        return null;
     }
 }
