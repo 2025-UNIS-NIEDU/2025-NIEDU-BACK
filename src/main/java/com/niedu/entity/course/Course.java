@@ -36,6 +36,7 @@ public class Course {
     private Topic topic;
 
     @Column(name = "view_count", nullable = false)
+    @Builder.Default
     private Long viewCount = 0L;
 
     @PrePersist

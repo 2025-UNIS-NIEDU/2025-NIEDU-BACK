@@ -17,22 +17,20 @@ public class Term {
     @Column(name = "term_id")
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false)
     private Session session;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition="text")
     private String definition;
 
     @Column(name = "example_sentence", length = 500)
     private String exampleSentence;
 
-    @Lob
-    @Column(name = "additional_explanation")
+    @Column(name = "additional_explanation", columnDefinition="text")
     private String additionalExplanation;
 
 }
