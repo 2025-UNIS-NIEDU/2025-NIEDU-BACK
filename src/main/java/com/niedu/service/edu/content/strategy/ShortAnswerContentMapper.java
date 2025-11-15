@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -47,15 +48,15 @@ public class ShortAnswerContentMapper implements ContentMapperStrategy{
     @Override
     public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
         return stepResponse.contents().stream()
-                .filter(c -> c instanceof ShortAnswerContentResponse)
-                .map(c -> (ShortAnswerContentResponse) c)
-                .map(content -> ShortAnswerQuiz.builder()
+                .map(raw -> (Map<String, Object>) raw)
+                .map(map -> ShortAnswerQuiz.builder()
                         .step(step)
-                        .question(content.question())
-                        .correctAnswer(content.correctAnswer())
-                        .answerExplanation(content.answerExplanation())
-                        .build())
-                .map(shortAnswerQuiz -> (Content) shortAnswerQuiz)
+                        .question((String) map.get("question"))
+                        .correctAnswer((String) map.get("correctAnswer"))
+                        .answerExplanation((String) map.get("answerExplanation"))
+                        .build()
+                )
+                .map(c -> (Content) c)
                 .toList();
     }
 }

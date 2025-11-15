@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -34,13 +35,13 @@ public class SessionReflectionContentMapper implements ContentMapperStrategy {
     @Override
     public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
         return stepResponse.contents().stream()
-                .filter(c -> c instanceof SessionReflectionContentResponse)
-                .map(c -> (SessionReflectionContentResponse) c)
-                .map(content -> SessionReflection.builder()
+                .map(raw -> (Map<String, Object>) raw)
+                .map(map -> SessionReflection.builder()
                         .step(step)
-                        .question(content.question())
-                        .build())
-                .map(sessionReflection -> (Content) sessionReflection)
+                        .question((String) map.get("question"))
+                        .build()
+                )
+                .map(c -> (Content) c)
                 .toList();
     }
 }

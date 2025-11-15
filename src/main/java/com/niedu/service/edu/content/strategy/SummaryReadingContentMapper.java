@@ -2,6 +2,7 @@ package com.niedu.service.edu.content.strategy;
 
 import com.niedu.dto.course.ai.AIStepResponse;
 import com.niedu.dto.course.content.ContentResponse;
+import com.niedu.dto.course.content.KeywordContent;
 import com.niedu.dto.course.content.SummaryReadingContentResponse;
 import com.niedu.entity.content.Content;
 import com.niedu.entity.content.SummaryReading;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -39,17 +41,27 @@ public class SummaryReadingContentMapper implements ContentMapperStrategy {
     @Override
     public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
         return stepResponse.contents().stream()
-                .filter(c -> c instanceof SummaryReadingContentResponse)
-                .map(c -> (SummaryReadingContentResponse) c)
-                .map(content -> {
-                    SummaryReading summaryReading = SummaryReading.builder()
+                .map(raw -> (Map<String, Object>) raw)
+                .map(map -> {
+                    SummaryReading summary = SummaryReading.builder()
                             .step(step)
-                            .summary(content.summary())
+                            .summary((String) map.get("summary"))
                             .build();
-                    summaryReading.setKeywords(content.keywords());
-                    return summaryReading;
+
+                    // keywords: List<Map<String,Object>>
+                    List<Map<String, Object>> keywords = (List<Map<String, Object>>) map.get("keywords");
+                    summary.setKeywords(
+                            keywords.stream()
+                                    .map(k -> new KeywordContent(
+                                            (String) k.get("word"),
+                                            (Boolean) k.get("isTopicWord")
+                                    ))
+                                    .toList()
+                    );
+
+                    return summary;
                 })
-                .map(summaryReading -> (Content) summaryReading)
+                .map(c -> (Content) c)
                 .toList();
     }
 }

@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -38,18 +39,17 @@ public class CurrentAffairsContentMapper implements ContentMapperStrategy{
     @Override
     public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
         return stepResponse.contents().stream()
-                .filter(c -> c instanceof CurrentAffairsContentResponse)
-                .map(c -> (CurrentAffairsContentResponse) c)
-                .map(content -> CurrentAffairs.builder()
+                .map(raw -> (Map<String, Object>) raw)  // Map 형변환
+                .map(map -> CurrentAffairs.builder()
                         .step(step)
-                        .issue(content.issue())
-                        .cause(content.cause())
-                        .circumstance(content.circumstance())
-                        .result(content.result())
-                        .effect(content.effect())
+                        .issue((String) map.get("issue"))
+                        .cause((String) map.get("cause"))
+                        .circumstance((String) map.get("circumstance"))
+                        .result((String) map.get("result"))
+                        .effect((String) map.get("effect"))
                         .build()
                 )
-                .map(currentAffairs -> (Content) currentAffairs)
+                .map(content -> (Content) content)
                 .toList();
     }
 }

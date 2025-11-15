@@ -9,9 +9,12 @@ import com.niedu.entity.content.SentenceCompletionQuiz;
 import com.niedu.entity.course.Step;
 import com.niedu.entity.course.StepType;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -42,14 +45,36 @@ public class SentenceCompletionContentMapper implements ContentMapperStrategy {
 
     @Override
     public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
+
         return stepResponse.contents().stream()
-                .filter(c -> c instanceof SentenceCompletionContentResponse)
-                .map(c -> (SentenceCompletionContentResponse) c)
-                .map(content -> SentenceCompletionQuiz.builder()
-                        .step(step)
-                        .question(content.question())
-                        .build())
-                .map(sentenceCompletionQuiz -> (Content) sentenceCompletionQuiz)
+                .flatMap(raw -> {
+
+                    // 1) raw = Map<String, Object>
+                    if (raw instanceof Map<?, ?> map) {
+                        return Stream.of(createEntity(step, (Map<String, Object>) map));
+                    }
+
+                    // 2) raw = List (e.g., [ {..}, {..} ])
+                    if (raw instanceof List<?> list) {
+                        return list.stream()
+                                .filter(item -> item instanceof Map<?, ?>)
+                                .map(item -> createEntity(step, (Map<String, Object>) item))
+                                .flatMap(Stream::of);
+                    }
+
+                    // 3) 그 외 형태는 무시
+                    log.warn("Unknown SENTENCE_COMPLETION content structure: {}", raw);
+                    return Stream.<Content>empty();
+                })
+                .map(c -> (Content) c)
                 .toList();
+    }
+
+    private SentenceCompletionQuiz createEntity(Step step, Map<String, Object> map) {
+        return SentenceCompletionQuiz.builder()
+                .step(step)
+                .question((String) map.get("question"))
+                .referenceAnswer((String) map.get("referenceAnswer"))
+                .build();
     }
 }

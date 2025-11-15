@@ -1,7 +1,7 @@
 package com.niedu.service.edu.content;
 
 import com.niedu.dto.course.ai.AIStepResponse;
-import com.niedu.dto.course.content.ContentResponse;
+import com.niedu.dto.course.content.*;
 import com.niedu.entity.content.Content;
 import com.niedu.entity.course.Step;
 import com.niedu.entity.course.StepType;
@@ -9,7 +9,9 @@ import com.niedu.service.edu.content.strategy.ContentMapperStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
