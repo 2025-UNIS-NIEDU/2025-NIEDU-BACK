@@ -1,5 +1,6 @@
 package com.niedu.service.edu.content.strategy;
 
+import com.niedu.dto.course.ai.AIStepResponse;
 import com.niedu.dto.course.content.ContentResponse;
 import com.niedu.dto.course.content.CurrentAffairsContentResponse;
 import com.niedu.entity.content.Content;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -32,5 +34,22 @@ public class CurrentAffairsContentMapper implements ContentMapperStrategy{
                     currentAffairs.getEffect()
             );
         else throw new RuntimeException("content 조회 실패");
+    }
+
+    @Override
+    public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
+        return stepResponse.contents().stream()
+                .map(raw -> (Map<String, Object>) raw)  // Map 형변환
+                .map(map -> CurrentAffairs.builder()
+                        .step(step)
+                        .issue((String) map.get("issue"))
+                        .cause((String) map.get("cause"))
+                        .circumstance((String) map.get("circumstance"))
+                        .result((String) map.get("result"))
+                        .effect((String) map.get("effect"))
+                        .build()
+                )
+                .map(content -> (Content) content)
+                .toList();
     }
 }
