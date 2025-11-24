@@ -110,15 +110,22 @@ public class AIService {
                     String.class
             );
         } catch (HttpClientErrorException e) {
-            log.error("클라이언트 오류: " + e.getStatusCode());
-            log.error("응답 바디: " + e.getResponseBodyAsString());
+            log.error("클라이언트 오류: {} - 응답 바디: {}", e.getStatusCode(), e.getResponseBodyAsString());
             return;
         } catch (HttpServerErrorException e) {
-            log.error("서버 오류: " + e.getStatusCode());
+            log.error("서버 오류: {}", e.getStatusCode());
             return;
         } catch (ResourceAccessException e) {
-            log.error("연결 실패: " + e.getMessage());
+            log.error("연결 실패: {}", e.getMessage());
             return;
+        }
+
+        // 디버깅: RestTemplate 응답 상태 확인
+        if (response != null) {
+            log.info("AI Server Status Code: {}", response.getStatusCode());
+            log.info("AI Server Response Headers: {}", response.getHeaders());
+        } else {
+            log.error("AI Server 응답 객체(ResponseEntity) 자체가 null입니다. RestTemplate 통신 문제 의심.");
         }
 
         String content = response != null ? response.getBody() : null;
