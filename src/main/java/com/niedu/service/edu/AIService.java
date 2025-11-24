@@ -148,6 +148,11 @@ public class AIService {
     // 저장용 메소드
     @Transactional
     public void importCourses(List<AICourseResponse> courses) {
+        // AI 서버 응답 DTO에서 courses 리스트가 null로 파싱되는 경우를 대비하여 방어 코드를 추가합니다.
+        if (courses == null || courses.isEmpty()) {
+            log.warn("Received null or empty course list from AI server. Skipping course import.");
+            return;
+        }
         courses.forEach(this::saveCourseWithRelations);
     }
 
