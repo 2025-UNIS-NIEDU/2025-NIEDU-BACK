@@ -90,7 +90,7 @@ public class AIService {
             log.error("연결 실패: " + e.getMessage());
         }
 
-        return response.getBody();
+        return response != null ? response.getBody() : null;
     }
 
     public void syncAIData() {
@@ -112,18 +112,29 @@ public class AIService {
         } catch (HttpClientErrorException e) {
             log.error("클라이언트 오류: " + e.getStatusCode());
             log.error("응답 바디: " + e.getResponseBodyAsString());
+            return;
         } catch (HttpServerErrorException e) {
             log.error("서버 오류: " + e.getStatusCode());
+            return;
         } catch (ResourceAccessException e) {
             log.error("연결 실패: " + e.getMessage());
+            return;
+        }
+
+        String content = response != null ? response.getBody() : null;
+
+        if (content == null || content.isEmpty() || content.trim().length() < 3) {
+            log.warn("AI 서버로부터 받은 응답 본문이 비어 있거나 유효하지 않아 데이터 적재를 건너뜁니다.");
+            return;
         }
 
         try {
-            AICourseListResponse aiCourseListResponse = objectMapper.readValue(response.getBody(), AICourseListResponse.class);
+            AICourseListResponse aiCourseListResponse = objectMapper.readValue(content, AICourseListResponse.class);
             importCourses(aiCourseListResponse.courses());
 
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            log.error("JSON 파싱 오류 발생: {}", e.getMessage());
+            // JSON 파싱 오류 시에도 스케줄러가 멈추지 않고 안전하게 종료됩니다.
         }
     }
 
@@ -215,7 +226,7 @@ public class AIService {
         if (rawContents == null) rawContents = List.of();
 
         List<Object> normalizedContents = rawContents.stream()
-                .map(this::normalize)   // Map<String,Object> 로 강제 맞춤
+                .map(this::normalize)
                 .filter(Objects::nonNull)
                 .map(c -> (Object) c)
                 .toList();
