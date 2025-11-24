@@ -28,9 +28,9 @@ public class OnboardController {
 
     @PostMapping("/topics")
     public ResponseEntity<ApiResponse<?>> saveMyFavTopics(HttpServletRequest httpServletRequest,
-                                                          @RequestBody ArrayList<String> requestedTopics){
+                                                          @RequestBody ArrayList<String> topics){
         User user = authService.getUserFromRequest(httpServletRequest);
-        requestedTopics.stream()
+        topics.stream()
                 .map(topicRepository::findByName)
                 .filter(Objects::nonNull)
                 .map(topic -> new UserTopicPreference(user, topic))

@@ -1,5 +1,6 @@
 package com.niedu.service.edu.content.strategy;
 
+import com.niedu.dto.course.ai.AIStepResponse;
 import com.niedu.dto.course.content.ContentResponse;
 import com.niedu.dto.course.content.OxQuizContentListResponse;
 import com.niedu.dto.course.content.OxQuizContentResponse;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -41,5 +43,20 @@ public class OxQuizContentMapper implements ContentMapperStrategy{
                 step.getSession().getNewsRef().getSourceUrl(),
                 oxQuizContentResponses
         );
+    }
+
+    @Override
+    public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
+        return stepResponse.contents().stream()
+                .map(raw -> (Map<String, Object>) raw)
+                .map(map -> OxQuiz.builder()
+                        .step(step)
+                        .question((String) map.get("question"))
+                        .correctAnswer((String) map.get("correctAnswer"))
+                        .answerExplanation((String) map.get("answerExplanation"))
+                        .build()
+                )
+                .map(c -> (Content) c)
+                .toList();
     }
 }

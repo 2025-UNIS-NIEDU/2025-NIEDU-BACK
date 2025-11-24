@@ -1,5 +1,6 @@
 package com.niedu.service.edu.content.strategy;
 
+import com.niedu.dto.course.ai.AIStepResponse;
 import com.niedu.dto.course.content.ContentResponse;
 import com.niedu.dto.course.content.SessionReflectionContentResponse;
 import com.niedu.entity.content.Content;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -28,5 +30,18 @@ public class SessionReflectionContentMapper implements ContentMapperStrategy {
                     sessionReflection.getQuestion()
             );
         else throw new RuntimeException("content 조회 실패");
+    }
+
+    @Override
+    public List<Content> toEntities(Step step, AIStepResponse stepResponse) {
+        return stepResponse.contents().stream()
+                .map(raw -> (Map<String, Object>) raw)
+                .map(map -> SessionReflection.builder()
+                        .step(step)
+                        .question((String) map.get("question"))
+                        .build()
+                )
+                .map(c -> (Content) c)
+                .toList();
     }
 }

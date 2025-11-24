@@ -11,6 +11,9 @@ import jakarta.persistence.Lob;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +23,14 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @DiscriminatorValue("SUMMARY")
+@SuperBuilder
 public class SummaryReading extends Content {
     @Lob
     @Column(nullable = false)
     private String summary;
 
     @Column(columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String keywordsJson;
 
     // --- 직렬화 도우미 메서드 --- //

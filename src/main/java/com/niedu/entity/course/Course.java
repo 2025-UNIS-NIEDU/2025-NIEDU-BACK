@@ -2,15 +2,16 @@ package com.niedu.entity.course;
 
 import com.niedu.entity.topic.Topic;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "courses")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Course {
 
     @Id
@@ -35,6 +36,7 @@ public class Course {
     private Topic topic;
 
     @Column(name = "view_count", nullable = false)
+    @Builder.Default
     private Long viewCount = 0L;
 
     @PrePersist
