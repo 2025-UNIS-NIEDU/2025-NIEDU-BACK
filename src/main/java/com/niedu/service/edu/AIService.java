@@ -94,7 +94,7 @@ public class AIService {
     }
 
     public void syncAIData() {
-        String url = aiServerUrl + "/api/course/today";
+        String url = aiServerUrl + "/api/course/test";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
