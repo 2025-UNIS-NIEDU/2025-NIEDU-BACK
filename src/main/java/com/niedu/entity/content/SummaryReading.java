@@ -25,7 +25,6 @@ import java.util.List;
 @DiscriminatorValue("SUMMARY")
 @SuperBuilder
 public class SummaryReading extends Content {
-    @Lob
     @Column(nullable = false)
     private String summary;
 

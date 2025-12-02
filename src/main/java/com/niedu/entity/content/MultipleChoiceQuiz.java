@@ -19,7 +19,6 @@ public class MultipleChoiceQuiz extends Content {
     @Column(nullable = false)
     private String correctAnswer;
 
-    @Lob
     @Column(nullable = false)
     private String answerExplanation;
 

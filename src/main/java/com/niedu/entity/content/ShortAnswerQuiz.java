@@ -19,7 +19,6 @@ public class ShortAnswerQuiz extends Content {
     @Column(nullable = false)
     private String correctAnswer;
 
-    @Lob
     @Column(nullable = false)
     private String answerExplanation;
 }
