@@ -20,9 +20,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CourseService {
-    private static CourseRepository courseRepository;
-    private static CourseSubTopicRepository courseSubTopicRepository;
-    private static StudiedCourseRepository studiedCourseRepository;
+    private final CourseRepository courseRepository;
+    private final CourseSubTopicRepository courseSubTopicRepository;
+    private final StudiedCourseRepository studiedCourseRepository;
 
     public ArrayList<CourseListResponse> getCourses(User user, String type, String view, String topic, Integer page) {
         CourseType courseType = parseEnum(type, CourseType.class, CourseType.RECENT);
