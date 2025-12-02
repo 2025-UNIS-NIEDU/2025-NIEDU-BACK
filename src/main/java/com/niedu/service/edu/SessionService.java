@@ -51,20 +51,33 @@ public class SessionService {
     }
 
     public SessionStartResponse startSession(User user, Long sessionId, LevelRequest request) {
-        // 학습 이력 존재 여부를 바탕으로 StudiedSession 생성/업데이트
+
+        // 0. 세션 존재 확인
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found: " + sessionId));
+
+        // 학습 이력 존재 여부 확인
         StudiedSession sessionLog = studiedSessionRepository.findByUserAndSession_Id(user, sessionId);
-        if (sessionLog == null) { // 처음 학습하는 경우
-            // 1. StudiedSession 초기화
+
+        if (sessionLog == null) {
+            // ---------- [처음 학습] ----------
             sessionLog = StudiedSession.builder()
                     .user(user)
-                    .session(sessionRepository.findById(sessionId).orElse(null))
+                    .session(session)
                     .progress(0f)
                     .status(SessionStatus.IN_PROGRESS)
                     .startTime(LocalDateTime.now())
                     .build();
+
             StudiedSession savedStudiedSession = studiedSessionRepository.save(sessionLog);
-            // 2. StudiedStep 초기화
+
+            // Step 목록 조회
             List<Step> steps = stepRepository.findAllBySession_Id(sessionId);
+            if (steps == null) {
+                steps = List.of();
+            }
+
+            // StudiedStep 생성
             List<StudiedStep> studiedSteps = steps.stream()
                     .map(step -> StudiedStep.builder()
                             .user(user)
@@ -72,65 +85,82 @@ public class SessionService {
                             .isCompleted(false)
                             .build())
                     .toList();
+
             List<StudiedStep> savedStudiedSteps = studiedStepRepository.saveAll(studiedSteps);
-            // 3. steps 세팅
-            ArrayList<StepListResponse> stepListResponses = studiedSteps.stream()
-                    .map(studiedStep -> {
-                        Step step = studiedStep.getStep();
-                        List<Content> contents = contentRepository.findAllByStep(step);
-                        return new StepListResponse(
-                                step.getId(),
-                                step.getStepOrder(),
-                                studiedStep.getIsCompleted(),
-                                step.getType(),
-                                stepMapperService.toResponse(step, contents),
-                                userAnswerMapperService.toResponse(studiedStep), // 없으면 null
-                                userAnswerMapperService.checkIsCorrect(studiedStep) // 없으면 null
-                        );
-                    })
-                    .collect(Collectors.toCollection(ArrayList::new));
-            // 4. record 생성해서 리턴
-            SessionStartResponse response = new SessionStartResponse(
-                    savedStudiedSteps.getFirst().getId(),
+
+            // StepListResponse 구성
+            ArrayList<StepListResponse> stepListResponses = new ArrayList<>();
+            for (StudiedStep studiedStep : studiedSteps) {
+                Step step = studiedStep.getStep();
+                if (step == null) continue;
+
+                List<Content> contents = contentRepository.findAllByStep(step);
+                if (contents == null) contents = List.of();
+
+                stepListResponses.add(new StepListResponse(
+                        step.getId(),
+                        step.getStepOrder(),
+                        studiedStep.getIsCompleted(),
+                        step.getType(),
+                        stepMapperService.toResponse(step, contents),
+                        userAnswerMapperService.toResponse(studiedStep), // null 가능
+                        userAnswerMapperService.checkIsCorrect(studiedStep) // null 가능
+                ));
+            }
+
+            Long firstStudiedStepId = (savedStudiedSteps.isEmpty()) ? null : savedStudiedSteps.get(0).getId();
+
+            return new SessionStartResponse(
+                    firstStudiedStepId,
                     stepListResponses,
                     savedStudiedSession.getProgress()
             );
-            return response;
         }
-        else {
-            // 이전 학습 경험이 있는 경우
-            // 1. StudiedSession 업데이트
-            sessionLog.setStartTime(LocalDateTime.now());
-            StudiedSession savedStudiedSession = studiedSessionRepository.save(sessionLog);
-            // 2. StudiedStep 불러오기
-            List<StudiedStep> studiedSteps = studiedStepRepository.findAllByUser_IdAndStep_Session_Id(user.getId(), sessionId);
-            // 3. steps 세팅
-            ArrayList<StepListResponse> stepListResponses = studiedSteps.stream()
-                    .map(studiedStep -> {
-                        Step step = studiedStep.getStep();
-                        List<Content> contents = contentRepository.findAllByStep(step);
-                        return new StepListResponse(
-                                step.getId(),
-                                step.getStepOrder(),
-                                studiedStep.getIsCompleted(),
-                                step.getType(),
-                                stepMapperService.toResponse(step, contents),
-                                userAnswerMapperService.toResponse(studiedStep), // 없으면 null
-                                userAnswerMapperService.checkIsCorrect(studiedStep)  // 없으면 null
-                        );
-                    })
-                    .collect(Collectors.toCollection(ArrayList::new));
-            // 4. record 생성해서 리턴
-            StudiedStep firstStep = studiedStepRepository
-                    .findFirstByUserAndStep_Session_IdAndIsCompletedFalseOrderByStep_IdAsc(user, sessionId)
-                    .orElseGet(() -> studiedStepRepository.findFirstByUserAndStep_Session_Id(user, sessionId));
-            SessionStartResponse response = new SessionStartResponse(
-                    firstStep.getId(),
-                    stepListResponses,
-                    savedStudiedSession.getProgress()
-            );
-            return response;
+
+        // ---------- [이전에 학습한 적 있음] ----------
+        sessionLog.setStartTime(LocalDateTime.now());
+        StudiedSession savedStudiedSession = studiedSessionRepository.save(sessionLog);
+
+        // StudiedStep 불러오기
+        List<StudiedStep> studiedSteps =
+                studiedStepRepository.findAllByUser_IdAndStep_Session_Id(user.getId(), sessionId);
+
+        if (studiedSteps == null) studiedSteps = List.of();
+
+        ArrayList<StepListResponse> stepListResponses = new ArrayList<>();
+
+        for (StudiedStep studiedStep : studiedSteps) {
+            Step step = studiedStep.getStep();
+            if (step == null) continue;
+
+            List<Content> contents = contentRepository.findAllByStep(step);
+            if (contents == null) contents = List.of();
+
+            stepListResponses.add(new StepListResponse(
+                    step.getId(),
+                    step.getStepOrder(),
+                    studiedStep.getIsCompleted(),
+                    step.getType(),
+                    stepMapperService.toResponse(step, contents),
+                    userAnswerMapperService.toResponse(studiedStep),
+                    userAnswerMapperService.checkIsCorrect(studiedStep)
+            ));
         }
+
+        // 첫 미완료 Step 찾기
+        StudiedStep firstStep = studiedStepRepository
+                .findFirstByUserAndStep_Session_IdAndIsCompletedFalseOrderByStep_IdAsc(user, sessionId)
+                .orElseGet(() ->
+                        studiedStepRepository.findFirstByUserAndStep_Session_Id(user, sessionId)
+                );
+
+        Long firstStudiedStepId = (firstStep != null) ? firstStep.getId() : null;
+
+        return new SessionStartResponse(
+                firstStudiedStepId,
+                stepListResponses,
+                savedStudiedSession.getProgress()
+        );
     }
 
     public void quitSession(User user, Long sessionId) {
