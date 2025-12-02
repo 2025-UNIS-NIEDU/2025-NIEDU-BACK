@@ -46,7 +46,7 @@ public class CourseService {
                 course.getThumbnailUrl(),
                 course.getTitle(),
                 course.getTopic().getName(),
-                studiedCourseRepository.findByUserAndCourse_Id(user, course.getId()).getProgress(),
+                (studiedCourseRepository.findByUserAndCourse_Id(user, course.getId()).getProgress() == null) ? 0 : studiedCourseRepository.findByUserAndCourse_Id(user, course.getId()).getProgress(),
                 course.getDescription()
         );
     }
