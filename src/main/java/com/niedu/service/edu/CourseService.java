@@ -65,6 +65,7 @@ public class CourseService {
                 List<Course> courses = courseRepository.findByTopic_NameIgnoreCaseOrderByCreatedAtDesc(topic, PageRequest.of(0, 9));
                 ArrayList<CourseListResponse> responses = courses.stream()
                         .map(course -> new CourseListResponse(
+                                course.getId(),
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
                                 null,
@@ -78,6 +79,7 @@ public class CourseService {
                 List<Course> courses = courseRepository.findByTopic_NameIgnoreCaseOrderByCreatedAtDesc(topic, PageRequest.of(page, 10));
                 ArrayList<CourseListResponse> responses = courses.stream()
                         .map(course -> new CourseListResponse(
+                                course.getId(),
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
                                 course.getDescription(),
@@ -99,6 +101,7 @@ public class CourseService {
                 List<Course> courses = courseRepository.findAllByOrderByViewCountDesc(PageRequest.of(0, 9));
                 ArrayList<CourseListResponse> responses = courses.stream()
                         .map(course -> new CourseListResponse(
+                                course.getId(),
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
                                 null,
@@ -112,6 +115,7 @@ public class CourseService {
                 List<Course> courses = courseRepository.findAllByOrderByViewCountDesc(PageRequest.of(page, 10));
                 ArrayList<CourseListResponse> responses = courses.stream()
                         .map(course -> new CourseListResponse(
+                                course.getId(),
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
                                 course.getDescription(),
@@ -133,6 +137,7 @@ public class CourseService {
                 List<Course> courses = courseRepository.findCoursesByUserPreferredTopicsOrderByViewCountDesc(user.getId(), PageRequest.of(0, 9));
                 ArrayList<CourseListResponse> responses = courses.stream()
                         .map(course -> new CourseListResponse(
+                                course.getId(),
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
                                 null,
@@ -146,6 +151,7 @@ public class CourseService {
                 List<Course> courses = courseRepository.findCoursesByUserPreferredTopicsOrderByViewCountDesc(user.getId(), PageRequest.of(page, 10));
                 ArrayList<CourseListResponse> responses = courses.stream()
                         .map(course -> new CourseListResponse(
+                                course.getId(),
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
                                 course.getDescription(),
@@ -168,6 +174,7 @@ public class CourseService {
                 if (courses.isEmpty()) courses = courseRepository.findRandomUnstudiedCoursesByUser(user.getId(), PageRequest.of(0, 9));
                 ArrayList<CourseListResponse> responses = courses.stream()
                         .map(course -> new CourseListResponse(
+                                course.getId(),
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
                                 null,
@@ -182,6 +189,7 @@ public class CourseService {
                 if (courses.isEmpty()) courses = courseRepository.findRandomUnstudiedCoursesByUser(user.getId(), PageRequest.of(page, 9));
                 ArrayList<CourseListResponse> responses = courses.stream()
                         .map(course -> new CourseListResponse(
+                                course.getId(),
                                 course.getTitle(),
                                 course.getThumbnailUrl(),
                                 course.getDescription(),

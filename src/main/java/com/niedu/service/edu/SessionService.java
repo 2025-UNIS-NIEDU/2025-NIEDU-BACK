@@ -41,6 +41,7 @@ public class SessionService {
         List<Session> sessions = sessionRepository.findAllByCourse_Id(courseId);
         ArrayList<SessionListResponse> responses = sessions.stream()
                 .map(session -> new SessionListResponse(
+                        session.getId(),
                         session.getNewsRef().getThumbnailUrl(),
                         session.getNewsRef().getHeadline(),
                         session.getNewsRef().getPublisher(),
