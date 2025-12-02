@@ -13,7 +13,7 @@ public class TestController {
 
     @GetMapping("/api/test")
     public ResponseEntity<?> test() {
-        aiService.syncAIData();
+        aiService.syncAIDataTest();
         return ResponseEntity.ok().build();
     }
 }

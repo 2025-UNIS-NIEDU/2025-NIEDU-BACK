@@ -22,6 +22,7 @@ import com.niedu.service.edu.content.StepMapperService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,8 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +94,43 @@ public class AIService {
         }
 
         return response != null ? response.getBody() : null;
+    }
+
+    public void syncAIDataTest() {
+
+        // 1. 리소스 파일 경로
+        String resourcePath = "economy_2025-11-24_package.json";
+
+        String content;
+        try {
+            // 2. classpath에서 파일 읽기
+            ClassPathResource resource = new ClassPathResource(resourcePath);
+            content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+        } catch (IOException e) {
+            log.error("리소스 파일 읽기 실패: {}", e.getMessage());
+            return;
+        }
+
+        // 3. 유효성 검사 (기존 sync 로직과 동일)
+        if (content == null || content.isEmpty() || content.trim().length() < 3) {
+            log.warn("리소스 JSON 데이터가 비어 있거나 유효하지 않아 데이터 적재를 건너뜁니다.");
+            return;
+        }
+
+        try {
+            // 4. JSON → AICourseListResponse 역직렬화
+            AICourseListResponse aiCourseListResponse =
+                    objectMapper.readValue(content, AICourseListResponse.class);
+
+            // 5. 실제 적재 로직 호출 (AI 서버 통신 없이 동일)
+            importCourses(aiCourseListResponse.courses());
+
+            log.info("리소스 기반 수동 동기화(syncAIDataTest) 완료.");
+
+        } catch (JsonProcessingException e) {
+            log.error("JSON 파싱 오류 발생: {}", e.getMessage());
+        }
     }
 
     public void syncAIData() {
