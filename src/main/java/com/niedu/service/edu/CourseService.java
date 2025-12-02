@@ -3,6 +3,7 @@ package com.niedu.service.edu;
 import com.niedu.dto.course.CourseListResponse;
 import com.niedu.dto.course.CourseResponse;
 import com.niedu.entity.course.Course;
+import com.niedu.entity.learning_record.StudiedCourse;
 import com.niedu.entity.user.User;
 import com.niedu.global.enums.CourseType;
 import com.niedu.global.enums.CourseView;
@@ -41,12 +42,18 @@ public class CourseService {
 
     public CourseResponse getCourse(User user, Long courseId) {
         Course course = courseRepository.findById(courseId).orElse(null);
+        StudiedCourse studied = studiedCourseRepository.findByUserAndCourse_Id(user, course.getId());
+
+        float progress = 0;
+        if (studied != null && studied.getProgress() != null) {
+            progress = studied.getProgress();
+        }
         if (course == null) return null;
         return new CourseResponse(
                 course.getThumbnailUrl(),
                 course.getTitle(),
                 course.getTopic().getName(),
-                (studiedCourseRepository.findByUserAndCourse_Id(user, course.getId()).getProgress() == null) ? 0 : studiedCourseRepository.findByUserAndCourse_Id(user, course.getId()).getProgress(),
+                progress,
                 course.getDescription()
         );
     }
