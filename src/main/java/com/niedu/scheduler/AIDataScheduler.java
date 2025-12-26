@@ -16,7 +16,7 @@ public class AIDataScheduler {
     @Scheduled(cron = "0 14 19 * * *", zone = "Asia/Seoul")
     public void syncAIData() {
         log.info("AI 서버 Data 동기화 시작");
-        aiService.syncAIData();
+        aiService.syncAllAICourses();
         log.info("AI 서버 Data 동기화 완료");
     }
 }

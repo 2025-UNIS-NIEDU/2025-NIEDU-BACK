@@ -96,45 +96,97 @@ public class AIService {
         return response != null ? response.getBody() : null;
     }
 
-    public void syncAIDataTest() {
+//    public void syncAIDataTest() {
+//
+//        // 1. 리소스 파일 경로
+//        String resourcePath = "economy_2025-11-24_package.json";
+//
+//        String content;
+//        try {
+//            // 2. classpath에서 파일 읽기
+//            ClassPathResource resource = new ClassPathResource(resourcePath);
+//            content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+//
+//        } catch (IOException e) {
+//            log.error("리소스 파일 읽기 실패: {}", e.getMessage());
+//            return;
+//        }
+//
+//        // 3. 유효성 검사 (기존 sync 로직과 동일)
+//        if (content == null || content.isEmpty() || content.trim().length() < 3) {
+//            log.warn("리소스 JSON 데이터가 비어 있거나 유효하지 않아 데이터 적재를 건너뜁니다.");
+//            return;
+//        }
+//
+//        try {
+//            // 4. JSON → AICourseListResponse 역직렬화
+//            AICourseListResponse aiCourseListResponse =
+//                    objectMapper.readValue(content, AICourseListResponse.class);
+//
+//            // 5. 실제 적재 로직 호출 (AI 서버 통신 없이 동일)
+//            importCourses(aiCourseListResponse.courses());
+//
+//            log.info("리소스 기반 수동 동기화(syncAIDataTest) 완료.");
+//
+//        } catch (JsonProcessingException e) {
+//            log.error("JSON 파싱 오류 발생: {}", e.getMessage());
+//        }
+//    }
+//
+//    public void syncAIData() {
+//        String url = aiServerUrl + "/api/course/test";
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.add("X-API-KEY", aiServerApiKey);
+//
+//        HttpEntity<Void> entity = new HttpEntity<>(headers);
+//        ResponseEntity<String> response = null;
+//        try {
+//            response = restTemplate.exchange(
+//                    url,
+//                    HttpMethod.GET,
+//                    entity,
+//                    String.class
+//            );
+//        } catch (HttpClientErrorException e) {
+//            log.error("클라이언트 오류: {} - 응답 바디: {}", e.getStatusCode(), e.getResponseBodyAsString());
+//            return;
+//        } catch (HttpServerErrorException e) {
+//            log.error("서버 오류: {}", e.getStatusCode());
+//            return;
+//        } catch (ResourceAccessException e) {
+//            log.error("연결 실패: {}", e.getMessage());
+//            return;
+//        }
+//
+//        // 디버깅: RestTemplate 응답 상태 확인
+//        if (response != null) {
+//            log.info("AI Server Status Code: {}", response.getStatusCode());
+//            log.info("AI Server Response Headers: {}", response.getHeaders());
+//        } else {
+//            log.error("AI Server 응답 객체(ResponseEntity) 자체가 null입니다. RestTemplate 통신 문제 의심.");
+//        }
+//
+//        String content = response != null ? response.getBody() : null;
+//
+//        if (content == null || content.isEmpty() || content.trim().length() < 3) {
+//            log.warn("AI 서버로부터 받은 응답 본문이 비어 있거나 유효하지 않아 데이터 적재를 건너뜁니다.");
+//            return;
+//        }
+//
+//        try {
+//            AICourseListResponse aiCourseListResponse = objectMapper.readValue(content, AICourseListResponse.class);
+//            importCourses(aiCourseListResponse.courses());
+//
+//        } catch (JsonProcessingException e) {
+//            log.error("JSON 파싱 오류 발생: {}", e.getMessage());
+//            // JSON 파싱 오류 시에도 스케줄러가 멈추지 않고 안전하게 종료됩니다.
+//        }
+//    }
 
-        // 1. 리소스 파일 경로
-        String resourcePath = "economy_2025-11-24_package.json";
-
-        String content;
-        try {
-            // 2. classpath에서 파일 읽기
-            ClassPathResource resource = new ClassPathResource(resourcePath);
-            content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-
-        } catch (IOException e) {
-            log.error("리소스 파일 읽기 실패: {}", e.getMessage());
-            return;
-        }
-
-        // 3. 유효성 검사 (기존 sync 로직과 동일)
-        if (content == null || content.isEmpty() || content.trim().length() < 3) {
-            log.warn("리소스 JSON 데이터가 비어 있거나 유효하지 않아 데이터 적재를 건너뜁니다.");
-            return;
-        }
-
-        try {
-            // 4. JSON → AICourseListResponse 역직렬화
-            AICourseListResponse aiCourseListResponse =
-                    objectMapper.readValue(content, AICourseListResponse.class);
-
-            // 5. 실제 적재 로직 호출 (AI 서버 통신 없이 동일)
-            importCourses(aiCourseListResponse.courses());
-
-            log.info("리소스 기반 수동 동기화(syncAIDataTest) 완료.");
-
-        } catch (JsonProcessingException e) {
-            log.error("JSON 파싱 오류 발생: {}", e.getMessage());
-        }
-    }
-
-    public void syncAIData() {
-        String url = aiServerUrl + "/api/course/test";
+    public void syncAllAICourses() {
+        String url = aiServerUrl + "/api/course/packages/all";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -142,6 +194,7 @@ public class AIService {
 
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         ResponseEntity<String> response = null;
+
         try {
             response = restTemplate.exchange(
                     url,
@@ -150,38 +203,27 @@ public class AIService {
                     String.class
             );
         } catch (HttpClientErrorException e) {
-            log.error("클라이언트 오류: {} - 응답 바디: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            log.error("Client error: {} - Response body: {}", e.getStatusCode(), e.getResponseBodyAsString());
             return;
         } catch (HttpServerErrorException e) {
-            log.error("서버 오류: {}", e.getStatusCode());
+            log.error("Server error: {}", e.getStatusCode());
             return;
         } catch (ResourceAccessException e) {
-            log.error("연결 실패: {}", e.getMessage());
+            log.error("Connection failed: {}", e.getMessage());
             return;
         }
 
-        // 디버깅: RestTemplate 응답 상태 확인
-        if (response != null) {
-            log.info("AI Server Status Code: {}", response.getStatusCode());
-            log.info("AI Server Response Headers: {}", response.getHeaders());
-        } else {
-            log.error("AI Server 응답 객체(ResponseEntity) 자체가 null입니다. RestTemplate 통신 문제 의심.");
-        }
-
-        String content = response != null ? response.getBody() : null;
-
-        if (content == null || content.isEmpty() || content.trim().length() < 3) {
-            log.warn("AI 서버로부터 받은 응답 본문이 비어 있거나 유효하지 않아 데이터 적재를 건너뜁니다.");
+        if (response == null || response.getBody() == null || response.getBody().isEmpty()) {
+            log.warn("Received empty or null response body from AI server. Skipping course import.");
             return;
         }
 
         try {
-            AICourseListResponse aiCourseListResponse = objectMapper.readValue(content, AICourseListResponse.class);
+            AICourseListResponse aiCourseListResponse = objectMapper.readValue(response.getBody(), AICourseListResponse.class);
             importCourses(aiCourseListResponse.courses());
-
+            log.info("Successfully imported all AI courses.");
         } catch (JsonProcessingException e) {
-            log.error("JSON 파싱 오류 발생: {}", e.getMessage());
-            // JSON 파싱 오류 시에도 스케줄러가 멈추지 않고 안전하게 종료됩니다.
+            log.error("JSON parsing error: {}", e.getMessage());
         }
     }
 
@@ -198,34 +240,45 @@ public class AIService {
 
     private void saveCourseWithRelations(AICourseResponse courseResponse) {
         // 1. Topic/SubTopic 존재 확인 or 생성
-        Topic topic = topicRepository.findByName(courseResponse.topic());
-        SubTopic subTopic = subTopicRepository.findByName(courseResponse.subTopic());
+        Topic topic = getOrCreateTopic(courseResponse.topic());
+        SubTopic subTopic = getOrCreateSubTopic(topic, courseResponse.subTopic());
+
+        String thumbnailUrl = null;
+        if (courseResponse.sessions() != null && !courseResponse.sessions().isEmpty()) {
+            thumbnailUrl = courseResponse.sessions().get(0).thumbnailUrl();
+        }
 
         // 2. Course 생성 및 저장
         Course course = courseRepository.save(Course.builder()
                 .title(courseResponse.courseName())
                 .description(courseResponse.courseDescription())
-                .thumbnailUrl(courseResponse.sessions().get(0).thumbnailUrl())
+                .thumbnailUrl(thumbnailUrl)
                 .createdAt(LocalDateTime.now())
                 .topic(topic)
                 .build());
 
         // 3. SubTags 저장
-        List<CourseSubTag> tags = courseResponse.subTags().stream()
-                .map(tag -> CourseSubTag.builder()
-                        .course(course)
-                        .tag(tag)
-                        .build())
-                .toList();
-        courseSubTagRepository.saveAll(tags);
+        List<String> subTags = courseResponse.subTags();
+        if (subTags != null && !subTags.isEmpty()) {
+            List<CourseSubTag> tags = subTags.stream()
+                    .map(tag -> CourseSubTag.builder()
+                            .course(course)
+                            .tag(tag)
+                            .build())
+                    .toList();
+            courseSubTagRepository.saveAll(tags);
+        }
 
         // 4. SubTopic 매핑 저장
         courseSubTopicRepository.save(new CourseSubTopic(course, subTopic));
 
         // 5. Sessions 저장
-        courseResponse.sessions().forEach(sessionResponse ->
-                saveSessionWithChildren(course, sessionResponse)
-        );
+        List<AISessionResponse> sessions = courseResponse.sessions();
+        if (sessions == null || sessions.isEmpty()) {
+            log.warn("Course({}) has NO sessions. Skipping session import.", course.getId());
+            return;
+        }
+        sessions.forEach(sessionResponse -> saveSessionWithChildren(course, sessionResponse));
     }
 
     private void saveSessionWithChildren(Course course, AISessionResponse sessionResponse) {
@@ -318,5 +371,21 @@ public class AIService {
 
         // 3) 그 외 타입은 무시
         return null;
+    }
+
+    private Topic getOrCreateTopic(String name) {
+        Topic topic = topicRepository.findByName(name);
+        if (topic != null) {
+            return topic;
+        }
+        return topicRepository.save(new Topic(name));
+    }
+
+    private SubTopic getOrCreateSubTopic(Topic topic, String name) {
+        SubTopic subTopic = subTopicRepository.findByName(name);
+        if (subTopic != null) {
+            return subTopic;
+        }
+        return subTopicRepository.save(new SubTopic(topic, name));
     }
 }

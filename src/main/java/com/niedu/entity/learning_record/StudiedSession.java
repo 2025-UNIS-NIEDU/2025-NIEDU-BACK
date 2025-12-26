@@ -37,7 +37,7 @@ public class StudiedSession {
     private SessionStatus status;
 
     @Builder.Default
-    @Column(name = "studied_time", columnDefinition = "interval")
+    @Column(name = "studied_time")
     private Duration studiedTime = Duration.ZERO;
 
     private LocalDateTime startTime;

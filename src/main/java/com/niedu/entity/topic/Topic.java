@@ -18,4 +18,8 @@ public class Topic {
 
     @Column(unique = true, nullable = false, length = 50)
     private String name;
+
+    public Topic(String name) {
+        this.name = name;
+    }
 }
