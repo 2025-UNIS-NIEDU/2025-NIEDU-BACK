@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
@@ -30,6 +32,12 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
 
     @Value("${jwt.refresh-token.expiration-time}")
     private long REFRESH_TOKEN_EXPIRATION_TIME;
+
+    @Value("${app.frontend.redirect-url}")
+    private String frontendRedirectUrl;
+
+    @Value("${app.cookie.domain:}")
+    private String cookieDomain;
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
@@ -82,41 +90,40 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
                         .build()
         );
 
-        // 요청 서버명 기준으로 로컬/운영 판별
+        // 1. 요청 서버명 기준으로 로컬/운영 판별
         boolean isLocal = TokenCookieSupport.isLocalRequest(request);
 
-        // 프론트엔드 Redirect URL 설정
-        String redirectUrl;
+        // 2. 프론트엔드 Redirect URL 결정
+        String redirectUrl = frontendRedirectUrl;
+
         if (isLocal) {
-            // 👉 로컬 환경
-            redirectUrl = "http://localhost:5173/login/success";
+            // 3. 로컬 환경: 토큰을 쿼리 파라미터로 전달
+            redirectUrl = buildRedirectUrlWithTokens(redirectUrl, accessToken, refreshToken);
         } else {
-            // 👉 운영 환경: 프론트 배포 주소 (실제 배포 주소로 교체)
-            redirectUrl = "https://niedu-service.com/login/success";
+            // 4. 운영 환경: 쿠키로 전달 (SameSite=None, Secure)
+            String domain = (cookieDomain == null || cookieDomain.isBlank()) ? null : cookieDomain;
+            boolean secureFlag = true;
+            String sameSite = "None";
+
+            TokenCookieSupport.addTokenCookie(
+                    response,
+                    "accessToken",
+                    accessToken,
+                    (int) (ACCESS_TOKEN_EXPIRATION_TIME / 1000),
+                    domain,
+                    secureFlag,
+                    sameSite
+            );
+            TokenCookieSupport.addTokenCookie(
+                    response,
+                    "refreshToken",
+                    refreshToken,
+                    (int) (REFRESH_TOKEN_EXPIRATION_TIME / 1000),
+                    domain,
+                    secureFlag,
+                    sameSite
+            );
         }
-
-        String domain = isLocal ? null : ".niedu-service.com";
-        boolean secureFlag = !isLocal;
-        String sameSite = isLocal ? "Lax" : "None";
-
-        TokenCookieSupport.addTokenCookie(
-                response,
-                "accessToken",
-                accessToken,
-                (int) (ACCESS_TOKEN_EXPIRATION_TIME / 1000),
-                domain,
-                secureFlag,
-                sameSite
-        );
-        TokenCookieSupport.addTokenCookie(
-                response,
-                "refreshToken",
-                refreshToken,
-                (int) (REFRESH_TOKEN_EXPIRATION_TIME / 1000),
-                domain,
-                secureFlag,
-                sameSite
-        );
 
         // 로그 출력
         log.info("""
@@ -124,7 +131,7 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
                 - kakaoId: {}
                 - redirect: {}
                 - mode: {}
-                """, kakaoId, redirectUrl, isLocal ? "LOCAL(쿠키 전달)" : "PROD(쿠키 전달, SameSite=None)");
+                """, kakaoId, redirectUrl, isLocal ? "LOCAL(쿼리 전달)" : "PROD(쿠키 전달, SameSite=None)");
 
         // 리다이렉트
         if (!response.isCommitted()) {
@@ -132,5 +139,11 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
         }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private String buildRedirectUrlWithTokens(String baseUrl, String accessToken, String refreshToken) {
+        String encodedAccessToken = URLEncoder.encode(accessToken, StandardCharsets.UTF_8);
+        String encodedRefreshToken = URLEncoder.encode(refreshToken, StandardCharsets.UTF_8);
+        return baseUrl + "?accessToken=" + encodedAccessToken + "&refreshToken=" + encodedRefreshToken;
     }
 }
