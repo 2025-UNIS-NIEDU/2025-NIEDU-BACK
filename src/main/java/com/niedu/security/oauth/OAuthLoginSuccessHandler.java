@@ -101,7 +101,7 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
             redirectUrl = buildRedirectUrlWithTokens(redirectUrl, accessToken, refreshToken);
         } else {
             // 4. 운영 환경: 쿠키로 전달 (SameSite=None, Secure)
-            String domain = (cookieDomain == null || cookieDomain.isBlank()) ? null : cookieDomain;
+            String domain = normalizeCookieDomain(cookieDomain);
             boolean secureFlag = true;
             String sameSite = "None";
 
@@ -145,5 +145,13 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
         String encodedAccessToken = URLEncoder.encode(accessToken, StandardCharsets.UTF_8);
         String encodedRefreshToken = URLEncoder.encode(refreshToken, StandardCharsets.UTF_8);
         return baseUrl + "?accessToken=" + encodedAccessToken + "&refreshToken=" + encodedRefreshToken;
+    }
+
+    private String normalizeCookieDomain(String domain) {
+        if (domain == null || domain.isBlank()) {
+            return null;
+        }
+        String trimmed = domain.trim();
+        return trimmed.startsWith(".") ? trimmed.substring(1) : trimmed;
     }
 }
