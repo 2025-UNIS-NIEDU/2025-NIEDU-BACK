@@ -4,7 +4,6 @@ import com.niedu.dto.search.CourseSearchResponse;
 import com.niedu.dto.search.SearchHistoryResponse;
 import com.niedu.entity.user.User;
 import com.niedu.global.response.ApiResponse;
-import com.niedu.security.jwt.JwtUtil;
 import com.niedu.service.auth.AuthService;
 import com.niedu.service.search.SearchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +29,6 @@ public class SearchController {
 
     private final AuthService authService;
     private final SearchService searchService;
-    private final JwtUtil jwtUtil;
 
     @Operation(summary = "이전 검색어 목록 조회", description = "SRH-BEFORE-02, SRH-BEFORE-03 명세서")
     @GetMapping("/history")

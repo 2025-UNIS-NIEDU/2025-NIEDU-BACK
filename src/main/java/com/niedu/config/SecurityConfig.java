@@ -66,6 +66,7 @@ public class SecurityConfig {
                                 "/login",
                                 "/oauth2/authorization/**",
                                 "/login/oauth2/code/**",
+                                "/api/auth/reissue-access-token",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

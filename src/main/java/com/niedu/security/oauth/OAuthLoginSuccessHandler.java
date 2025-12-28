@@ -4,8 +4,8 @@ import com.niedu.entity.user.RefreshToken;
 import com.niedu.entity.user.User;
 import com.niedu.repository.user.RefreshTokenRepository;
 import com.niedu.repository.user.UserRepository;
+import com.niedu.security.TokenCookieSupport;
 import com.niedu.security.jwt.JwtUtil;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -83,60 +83,48 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
         );
 
         // 요청 서버명 기준으로 로컬/운영 판별
-        String serverName = request.getServerName();
-        boolean isLocal = serverName.equalsIgnoreCase("localhost") || serverName.equals("127.0.0.1");
+        boolean isLocal = TokenCookieSupport.isLocalRequest(request);
 
         // 프론트엔드 Redirect URL 설정
         String redirectUrl;
         if (isLocal) {
-            // 👉 로컬 환경: 쿼리 파라미터로 토큰 전달
-            redirectUrl = "http://localhost:5173/login/success"
-                    + "?accessToken=" + accessToken
-                    + "&refreshToken=" + refreshToken;
+            // 👉 로컬 환경
+            redirectUrl = "http://localhost:5173/login/success";
         } else {
             // 👉 운영 환경: 프론트 배포 주소 (실제 배포 주소로 교체)
             redirectUrl = "https://niedu-service.com/login/success";
         }
 
-        // 운영 환경에서만 쿠키 전달
-        if (!isLocal) {
-            String domain = ".niedu-service.com";  // 공통 루트 도메인
-            boolean secureFlag = true;
+        String domain = isLocal ? null : ".niedu-service.com";
+        boolean secureFlag = !isLocal;
+        String sameSite = isLocal ? "Lax" : "None";
 
-            Cookie accessCookie = new Cookie("accessToken", accessToken);
-            accessCookie.setHttpOnly(true);
-            accessCookie.setSecure(secureFlag);
-            accessCookie.setPath("/");
-            accessCookie.setDomain(domain);
-            accessCookie.setMaxAge((int) (ACCESS_TOKEN_EXPIRATION_TIME / 1000));
-
-            Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
-            refreshCookie.setHttpOnly(true);
-            refreshCookie.setSecure(secureFlag);
-            refreshCookie.setPath("/");
-            refreshCookie.setDomain(domain);
-            refreshCookie.setMaxAge((int) (REFRESH_TOKEN_EXPIRATION_TIME / 1000));
-
-            response.addCookie(accessCookie);
-            response.addCookie(refreshCookie);
-
-            // SameSite=None 직접 헤더로 추가 (사파리 대응)
-            response.addHeader("Set-Cookie",
-                    String.format("accessToken=%s; Max-Age=%d; Path=/; Domain=%s; Secure; HttpOnly; SameSite=None",
-                            accessToken, ACCESS_TOKEN_EXPIRATION_TIME / 1000, domain));
-            response.addHeader("Set-Cookie",
-                    String.format("refreshToken=%s; Max-Age=%d; Path=/; Domain=%s; Secure; HttpOnly; SameSite=None",
-                            refreshToken, REFRESH_TOKEN_EXPIRATION_TIME / 1000, domain));
-        }
+        TokenCookieSupport.addTokenCookie(
+                response,
+                "accessToken",
+                accessToken,
+                (int) (ACCESS_TOKEN_EXPIRATION_TIME / 1000),
+                domain,
+                secureFlag,
+                sameSite
+        );
+        TokenCookieSupport.addTokenCookie(
+                response,
+                "refreshToken",
+                refreshToken,
+                (int) (REFRESH_TOKEN_EXPIRATION_TIME / 1000),
+                domain,
+                secureFlag,
+                sameSite
+        );
 
         // 로그 출력
         log.info("""
                 ✅ OAuth 로그인 성공
                 - kakaoId: {}
-                - serverName: {}
                 - redirect: {}
                 - mode: {}
-                """, kakaoId, serverName, redirectUrl, isLocal ? "LOCAL(파라미터 전달)" : "PROD(쿠키 전달, SameSite=None)");
+                """, kakaoId, redirectUrl, isLocal ? "LOCAL(쿠키 전달)" : "PROD(쿠키 전달, SameSite=None)");
 
         // 리다이렉트
         if (!response.isCommitted()) {
