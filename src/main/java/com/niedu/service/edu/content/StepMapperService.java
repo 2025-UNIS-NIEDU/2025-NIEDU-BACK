@@ -20,11 +20,12 @@ public class StepMapperService {
     private final List<ContentMapperStrategy> strategies;
 
     public ContentResponse toResponse(Step step, List<Content> contents) {
-        if (contents == null || contents.isEmpty()) {
+        StepType stepType = step.getType();
+        boolean allowEmptyContents =
+                stepType == StepType.TERM_LEARNING || stepType == StepType.ARTICLE_READING;
+        if ((contents == null || contents.isEmpty()) && !allowEmptyContents) {
             return null;
         }
-
-        StepType stepType = step.getType();
 
         ContentMapperStrategy strategy = strategies.stream()
                 .filter(s -> s.supports(stepType))

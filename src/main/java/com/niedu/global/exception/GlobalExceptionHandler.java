@@ -71,6 +71,13 @@ public class GlobalExceptionHandler {
         return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "서버에서 예기치 못한 오류가 발생했습니다.");
     }
 
+    /** 🔹 잘못된 요청 */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ApiResponse<?> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.warn("❗ Invalid argument: {}", e.getMessage());
+        return ApiResponse.error(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
     /** 🔹 그 외 모든 예외 */
     @ExceptionHandler(Exception.class)
     public ApiResponse<?> handleException(Exception e, HttpServletRequest request) {

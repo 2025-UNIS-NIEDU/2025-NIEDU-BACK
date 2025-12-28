@@ -1,8 +1,14 @@
 package com.niedu.service.edu;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.niedu.dto.course.*;
 import com.niedu.dto.course.user_answer.AnswerResponse;
+import com.niedu.dto.course.user_answer.SentenceCompletionAnswerListResponse;
+import com.niedu.dto.course.user_answer.SimpleAnswerListResponse;
+import com.niedu.dto.course.user_answer.SummaryReadingAnswerResponse;
 import com.niedu.entity.admin.AIErrorReport;
+import com.niedu.entity.course.StepType;
 import com.niedu.entity.learning_record.SharedResponse;
 import com.niedu.entity.learning_record.StudiedStep;
 import com.niedu.entity.learning_record.user_answer.UserAnswer;
@@ -29,11 +35,14 @@ public class StepService {
     private final UserAnswerRepository userAnswerRepository;
     private final SharedResponseRepository sharedResponseRepository;
     private final AIErrorReportRepository aiErrorReportRepository;
+    private final ObjectMapper objectMapper;
 
     public AnswerResponse submitStepAnswer(User user, Long stepId, StepAnswerRequest request) {
         // 1. UserAnswer entity 저장
         StudiedStep studiedStep = studiedStepRepository.findByUserAndStep_Id(user, stepId);
-        List<UserAnswer> userAnswers = userAnswerMapperService.toEntities(studiedStep, request.userAnswer());
+        StepType stepType = resolveStepType(studiedStep, request);
+        AnswerResponse userAnswer = mapUserAnswer(stepType, request.userAnswer());
+        List<UserAnswer> userAnswers = userAnswerMapperService.toEntities(studiedStep, userAnswer);
         // 2. StudiedStep 업데이트
         studiedStep.setIsCompleted(true);
         // 3. 리턴
@@ -75,5 +84,28 @@ public class StepService {
                 contentId);
         AIErrorReport saved = aiErrorReportRepository.save(aiErrorReport);
         return saved;
+    }
+
+    private StepType resolveStepType(StudiedStep studiedStep, StepAnswerRequest request) {
+        if (request != null && request.contentType() != null) {
+            return request.contentType();
+        }
+        return studiedStep.getStep().getType();
+    }
+
+    private AnswerResponse mapUserAnswer(StepType stepType, JsonNode userAnswerNode) {
+        if (userAnswerNode == null || userAnswerNode.isNull()) {
+            throw new IllegalArgumentException("userAnswer is required");
+        }
+        return switch (stepType) {
+            case OX_QUIZ, MULTIPLE_CHOICE, SHORT_ANSWER ->
+                    objectMapper.convertValue(userAnswerNode, SimpleAnswerListResponse.class);
+            case SENTENCE_COMPLETION ->
+                    objectMapper.convertValue(userAnswerNode, SentenceCompletionAnswerListResponse.class);
+            case SUMMARY_READING ->
+                    objectMapper.convertValue(userAnswerNode, SummaryReadingAnswerResponse.class);
+            default ->
+                    throw new IllegalArgumentException("Unsupported step type for answer: " + stepType);
+        };
     }
 }
