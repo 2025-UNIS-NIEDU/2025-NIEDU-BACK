@@ -167,18 +167,25 @@ public class SessionService {
     public void quitSession(User user, Long sessionId) {
         // 1. 진행률 확인
         StudiedSession studiedSession = studiedSessionRepository.findByUserAndSession_Id(user, sessionId);
+        if (studiedSession == null) {
+            throw new RuntimeException("StudiedSession not found for user " + user.getId() + " and session " + sessionId);
+        }
         List<StudiedStep> studiedSteps = studiedStepRepository.findAllByUser_IdAndStep_Session_Id(user.getId(), sessionId);
         long completedCount = studiedSteps.stream()
                 .filter(StudiedStep::getIsCompleted)
                 .count();
 
-        float progress = ((float) completedCount / studiedSteps.size()) * 100; // % 단위
+        float progress = 0f;
+        if (!studiedSteps.isEmpty()) {
+            progress = ((float) completedCount / studiedSteps.size()) * 100; // % 단위
+        }
 
         // 소수점 한 자리까지만 유지 (nn.n)
         float roundedProgress = Math.round(progress * 10f) / 10f;
 
         // 2. StudiedSession 진행률 업데이트
         studiedSession.setProgress(roundedProgress);
+        studiedSessionRepository.save(studiedSession);
     }
 
     public SessionSummaryResponse summarizeSession(User user, Long sessionId) {
