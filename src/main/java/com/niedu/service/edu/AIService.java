@@ -109,6 +109,49 @@ public class AIService {
     }
 
     @Transactional
+    public void syncMockAICourses() {
+        String url = aiServerUrl + "/api/course/packages/all";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("X-API-KEY", aiServerApiKey);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        ResponseEntity<String> response;
+
+        try {
+            response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+        } catch (HttpClientErrorException e) {
+            log.error("Client error: {} - Response body: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            return;
+        } catch (HttpServerErrorException e) {
+            log.error("Server error: {}", e.getStatusCode());
+            return;
+        } catch (ResourceAccessException e) {
+            log.error("Connection failed: {}", e.getMessage());
+            return;
+        }
+
+        if (response == null || response.getBody() == null || response.getBody().isEmpty()) {
+            log.warn("Received empty or null response body from AI server. Skipping course import.");
+            return;
+        }
+
+        try {
+            AICourseListResponse aiCourseListResponse = objectMapper.readValue(response.getBody(), AICourseListResponse.class);
+            importCourses(aiCourseListResponse.courses());
+            log.info("Successfully imported all AI courses.");
+        } catch (JsonProcessingException e) {
+            log.error("JSON parsing error: {}", e.getMessage());
+        }
+    }
+
+    @Transactional
     public void syncAllAICourses() {
         String url = aiServerUrl + "/api/course/today";
 
