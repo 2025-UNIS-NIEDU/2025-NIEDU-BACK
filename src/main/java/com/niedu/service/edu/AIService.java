@@ -1,29 +1,17 @@
 package com.niedu.service.edu;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.niedu.dto.course.FeedbackAnswerRequest;
-import com.niedu.dto.course.FeedbackAnswerResponse;
-import com.niedu.dto.course.ai.*;
-import com.niedu.entity.content.Content;
-import com.niedu.entity.content.NewsRef;
-import com.niedu.entity.course.*;
-import com.niedu.entity.topic.SubTopic;
-import com.niedu.entity.topic.Topic;
-import com.niedu.entity.user.User;
-import com.niedu.repository.content.ContentRepository;
-import com.niedu.repository.content.NewsRefRepository;
-import com.niedu.repository.content.TermRepository;
-import com.niedu.repository.course.*;
-import com.niedu.repository.topic.SubTopicRepository;
-import com.niedu.repository.topic.TopicRepository;
-import com.niedu.service.edu.content.StepMapperService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
@@ -31,13 +19,39 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.niedu.dto.course.FeedbackAnswerRequest;
+import com.niedu.dto.course.FeedbackAnswerResponse;
+import com.niedu.dto.course.ai.AICourseListResponse;
+import com.niedu.dto.course.ai.AICourseResponse;
+import com.niedu.dto.course.ai.AIQuizResponse;
+import com.niedu.dto.course.ai.AISessionResponse;
+import com.niedu.dto.course.ai.AIStepResponse;
+import com.niedu.entity.content.Content;
+import com.niedu.entity.content.NewsRef;
+import com.niedu.entity.course.Course;
+import com.niedu.entity.course.CourseSubTag;
+import com.niedu.entity.course.CourseSubTopic;
+import com.niedu.entity.course.Session;
+import com.niedu.entity.course.Step;
+import com.niedu.entity.topic.SubTopic;
+import com.niedu.entity.topic.Topic;
+import com.niedu.entity.user.User;
+import com.niedu.repository.content.ContentRepository;
+import com.niedu.repository.content.NewsRefRepository;
+import com.niedu.repository.course.CourseRepository;
+import com.niedu.repository.course.CourseSubTagRepository;
+import com.niedu.repository.course.CourseSubTopicRepository;
+import com.niedu.repository.course.SessionRepository;
+import com.niedu.repository.course.StepRepository;
+import com.niedu.repository.topic.SubTopicRepository;
+import com.niedu.repository.topic.TopicRepository;
+import com.niedu.service.edu.content.StepMapperService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -58,8 +72,6 @@ public class AIService {
     private final StepRepository stepRepository;
     private final StepMapperService stepMapperService;
     private final ContentRepository contentRepository;
-
-    private final TermRepository termRepository;
 
     @Value("${external.ai-server.url}")
     private String aiServerUrl;
@@ -96,104 +108,16 @@ public class AIService {
         return response != null ? response.getBody() : null;
     }
 
-//    public void syncAIDataTest() {
-//
-//        // 1. 리소스 파일 경로
-//        String resourcePath = "economy_2025-11-24_package.json";
-//
-//        String content;
-//        try {
-//            // 2. classpath에서 파일 읽기
-//            ClassPathResource resource = new ClassPathResource(resourcePath);
-//            content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-//
-//        } catch (IOException e) {
-//            log.error("리소스 파일 읽기 실패: {}", e.getMessage());
-//            return;
-//        }
-//
-//        // 3. 유효성 검사 (기존 sync 로직과 동일)
-//        if (content == null || content.isEmpty() || content.trim().length() < 3) {
-//            log.warn("리소스 JSON 데이터가 비어 있거나 유효하지 않아 데이터 적재를 건너뜁니다.");
-//            return;
-//        }
-//
-//        try {
-//            // 4. JSON → AICourseListResponse 역직렬화
-//            AICourseListResponse aiCourseListResponse =
-//                    objectMapper.readValue(content, AICourseListResponse.class);
-//
-//            // 5. 실제 적재 로직 호출 (AI 서버 통신 없이 동일)
-//            importCourses(aiCourseListResponse.courses());
-//
-//            log.info("리소스 기반 수동 동기화(syncAIDataTest) 완료.");
-//
-//        } catch (JsonProcessingException e) {
-//            log.error("JSON 파싱 오류 발생: {}", e.getMessage());
-//        }
-//    }
-//
-//    public void syncAIData() {
-//        String url = aiServerUrl + "/api/course/test";
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        headers.add("X-API-KEY", aiServerApiKey);
-//
-//        HttpEntity<Void> entity = new HttpEntity<>(headers);
-//        ResponseEntity<String> response = null;
-//        try {
-//            response = restTemplate.exchange(
-//                    url,
-//                    HttpMethod.GET,
-//                    entity,
-//                    String.class
-//            );
-//        } catch (HttpClientErrorException e) {
-//            log.error("클라이언트 오류: {} - 응답 바디: {}", e.getStatusCode(), e.getResponseBodyAsString());
-//            return;
-//        } catch (HttpServerErrorException e) {
-//            log.error("서버 오류: {}", e.getStatusCode());
-//            return;
-//        } catch (ResourceAccessException e) {
-//            log.error("연결 실패: {}", e.getMessage());
-//            return;
-//        }
-//
-//        // 디버깅: RestTemplate 응답 상태 확인
-//        if (response != null) {
-//            log.info("AI Server Status Code: {}", response.getStatusCode());
-//            log.info("AI Server Response Headers: {}", response.getHeaders());
-//        } else {
-//            log.error("AI Server 응답 객체(ResponseEntity) 자체가 null입니다. RestTemplate 통신 문제 의심.");
-//        }
-//
-//        String content = response != null ? response.getBody() : null;
-//
-//        if (content == null || content.isEmpty() || content.trim().length() < 3) {
-//            log.warn("AI 서버로부터 받은 응답 본문이 비어 있거나 유효하지 않아 데이터 적재를 건너뜁니다.");
-//            return;
-//        }
-//
-//        try {
-//            AICourseListResponse aiCourseListResponse = objectMapper.readValue(content, AICourseListResponse.class);
-//            importCourses(aiCourseListResponse.courses());
-//
-//        } catch (JsonProcessingException e) {
-//            log.error("JSON 파싱 오류 발생: {}", e.getMessage());
-//            // JSON 파싱 오류 시에도 스케줄러가 멈추지 않고 안전하게 종료됩니다.
-//        }
-//    }
-
+    @Transactional
     public void syncAllAICourses() {
-        String url = aiServerUrl + "/api/course/packages/all";
+        String url = aiServerUrl + "/api/course/today";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("X-API-KEY", aiServerApiKey);
 
         HttpEntity<Void> entity = new HttpEntity<>(headers);
-        ResponseEntity<String> response = null;
+        ResponseEntity<String> response;
 
         try {
             response = restTemplate.exchange(
