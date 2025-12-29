@@ -30,6 +30,9 @@ public class AuthController {
     @Value("${jwt.access-token.expiration-time}")
     private long ACCESS_TOKEN_EXPIRATION_TIME;
 
+    @Value("${app.cookie.domain:}")
+    private String cookieDomain;
+
     @PostMapping("/reissue-access-token")
     public void reissueAccessToken(HttpServletRequest request, HttpServletResponse response) {
         try {
@@ -62,7 +65,7 @@ public class AuthController {
 
             // 환경 구분
             boolean isLocal = TokenCookieSupport.isLocalRequest(request);
-            String domain = isLocal ? null : ".niedu-service.com";
+            String domain = isLocal ? null : normalizeCookieDomain(cookieDomain);
             boolean secureFlag = !isLocal;
             String sameSite = isLocal ? "Lax" : "None";
 
@@ -83,5 +86,13 @@ public class AuthController {
             log.error("Access Token 재발급 실패: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
+    }
+
+    private String normalizeCookieDomain(String domain) {
+        if (domain == null || domain.isBlank()) {
+            return null;
+        }
+        String trimmed = domain.trim();
+        return trimmed.startsWith(".") ? trimmed.substring(1) : trimmed;
     }
 }
