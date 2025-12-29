@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Slf4j
@@ -34,18 +36,26 @@ public class AuthController {
             // 쿠키에서 refreshToken 찾기
             String refreshToken = CookieUtils.getCookieValue(request, "refreshToken")
                     .orElseThrow(() -> new RuntimeException("RefreshToken 쿠키 없음"));
+            refreshToken = URLDecoder.decode(refreshToken, StandardCharsets.UTF_8);
+            if (refreshToken.startsWith("Bearer ")) {
+                refreshToken = refreshToken.substring(7);
+            }
+            log.debug("Reissue access token: refreshToken cookie length={}", refreshToken.length());
 
             // Refresh Token 검증
             String userId = jwtUtil.extractUsername(refreshToken);
+            log.debug("Reissue access token: extracted userId={}", userId);
             if (jwtUtil.extractExpiration(refreshToken).before(new Date())) {
                 throw new RuntimeException("RefreshToken 만료됨");
             }
+            log.debug("Reissue access token: refreshToken not expired");
 
             // DB 내 저장된 Refresh Token과 일치 여부 확인
             RefreshToken saved = refreshTokenRepository.findByUserId(Long.parseLong(userId)).orElse(null);
             if (saved == null || !saved.getToken().equals(refreshToken)) {
                 throw new RuntimeException("RefreshToken 불일치");
             }
+            log.debug("Reissue access token: refreshToken matched DB");
 
             // Access Token 발급
             String newAccessToken = jwtUtil.generateAccessToken(Long.parseLong(userId));
