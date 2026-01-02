@@ -32,7 +32,10 @@ public class MyPageController {
     private final MyPageService myPageService;
     private final AuthService authService;
 
-    @Operation(summary = "캘린더 - 날짜 내비게이터 (SET-ALL-02)")
+    @Operation(
+            summary = "캘린더 - 날짜 내비게이터",
+            description = "FUNCTION ID: SET-ALL-02"
+    )
     @GetMapping("/date-navigator")
     public ResponseEntity<ApiResponse<MyCalendarResponse>> getDateNavigator(
             @Parameter(hidden = true) HttpServletRequest request
@@ -42,7 +45,10 @@ public class MyPageController {
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
-    @Operation(summary = "캘린더 - 캘린더 (SET-ALL-03)")
+    @Operation(
+            summary = "캘린더 - 캘린더",
+            description = "FUNCTION ID: SET-ALL-03"
+    )
     @GetMapping("/calendar")
     public ResponseEntity<ApiResponse<MyCalendarResponse>> getCalendar(
             @Parameter(hidden = true) HttpServletRequest request,
@@ -54,7 +60,10 @@ public class MyPageController {
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
-    @Operation(summary = "복습 노트 내 날짜별 문제 조회 (SET-REVIEW-01~03)")
+    @Operation(
+            summary = "복습 노트 내 날짜별 문제 조회. 초기 진입 시에는 금일 기준으로 요청, 이후에는 선택일 기준으로 요청",
+            description = "FUNCTION ID: SET-REVIEW-01, SET-REVIEW-02, SET-REVIEW-03"
+    )
     @GetMapping("/review-notes")
     public ResponseEntity<ApiResponse<List<ReviewNoteItemResponse>>> getReviewNotes(
             @Parameter(hidden = true) HttpServletRequest request,
@@ -66,7 +75,10 @@ public class MyPageController {
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
-    @Operation(summary = "용어 사전 내 전체 용어 조회 (SET-DICTIONARY-03)")
+    @Operation(
+            summary = "용어 사전 내 전체 용어 조회 (가나다순: alphabetical, 최근저장순: recent)",
+            description = "FUNCTION ID: SET-DICTIONARY-03"
+    )
     @GetMapping("/terms")
     public ResponseEntity<ApiResponse<MyTermListResponse>> getAllMyTerms(
             @Parameter(hidden = true) HttpServletRequest request,
@@ -78,7 +90,10 @@ public class MyPageController {
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
-    @Operation(summary = "용어 사전 내 특정 용어 조회 (SET-DICTIONARY-04)", description = "저장한 특정 용어 상세 조회")
+    @Operation(
+            summary = "용어 사전 내 특정 용어 조회",
+            description = "FUNCTION ID: SET-DICTIONARY-04"
+    )
     @GetMapping("/terms/{termId}")
     public ResponseEntity<ApiResponse<TermContent>> getMyTermById(
                                                                    @Parameter(hidden = true) HttpServletRequest request, // --- [수정] ---

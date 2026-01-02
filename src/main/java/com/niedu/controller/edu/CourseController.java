@@ -6,6 +6,8 @@ import com.niedu.entity.user.User;
 import com.niedu.global.response.ApiResponse;
 import com.niedu.service.auth.AuthService;
 import com.niedu.service.edu.CourseService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,10 +19,15 @@ import java.util.ArrayList;
 @RestController
 @RequestMapping("/api/edu/courses")
 @RequiredArgsConstructor
+@Tag(name = "학습", description = "코스/세션/스텝 학습 관련 API")
 public class CourseController {
     private final CourseService courseService;
     private final AuthService authService;
 
+    @Operation(
+            summary = "코스 조회 (type: RECENT/POPULAR/CUSTOM/NEW, view: PREVIEW/ALL, topic: 정치/경제/사회/국제, page: 무한스크롤용)",
+            description = "FUNCTION ID: EDU-EDU-02, EDU-EDU-03, EDU-EDU-04, EDU-EDU-05, EDU-RECENT-01, EDU-HOT-01, EDU-PERSONALIZED-01, EDU-NEW-01"
+    )
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getCourses(HttpServletRequest httpServletRequest,
                                                      @RequestParam("type") String type,
@@ -34,6 +41,10 @@ public class CourseController {
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "코스 목록 조회에 실패했습니다."));
     }
 
+    @Operation(
+            summary = "특정 코스 상세 조회",
+            description = "FUNCTION ID: EDU-DETAIL-03"
+    )
     @GetMapping("/{courseId}")
     public ResponseEntity<ApiResponse<?>> getCourse(HttpServletRequest httpServletRequest,
                                                     @PathVariable("courseId") Long courseId) {

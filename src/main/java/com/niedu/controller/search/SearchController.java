@@ -30,7 +30,10 @@ public class SearchController {
     private final AuthService authService;
     private final SearchService searchService;
 
-    @Operation(summary = "이전 검색어 목록 조회", description = "SRH-BEFORE-02, SRH-BEFORE-03 명세서")
+    @Operation(
+            summary = "이전 검색어 목록 조회",
+            description = "FUNCTION ID: SRH-BEFORE-02, SRH-BEFORE-03"
+    )
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<List<SearchHistoryResponse>>> getSearchHistory(HttpServletRequest httpServletRequest) {
         User user = authService.getUserFromRequest(httpServletRequest);
@@ -39,7 +42,10 @@ public class SearchController {
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
-    @Operation(summary = "이전 검색어 삭제", description = "SRH-BEFORE-?? 명세서")
+    @Operation(
+            summary = "이전 검색어 목록에서 특정 항목 삭제",
+            description = "FUNCTION ID: 없음"
+    )
     @DeleteMapping("/history/{logId}")
     public ResponseEntity<ApiResponse<?>> deleteSearchHistory(
             @Parameter(description = "삭제할 검색 기록 ID", required = true) @PathVariable Long logId
@@ -49,14 +55,20 @@ public class SearchController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @Operation(summary = "추천 검색어 목록 조회", description = "SRH-BEFORE-01 명세서")
+    @Operation(
+            summary = "추천 검색어 목록 조회",
+            description = "FUNCTION ID: SRH-BEFORE-01"
+    )
     @GetMapping("/suggestions")
     public ResponseEntity<ApiResponse<List<String>>> getSearchSuggestions() {
         List<String> response = searchService.getSearchSuggestions();
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "코스 검색 결과 조회", description = "SRH-AFTER-02, SRH-AFTER-03 명세서")
+    @Operation(
+            summary = "코스 검색 결과 조회 (sort: recent/popular)",
+            description = "FUNCTION ID: SRH-AFTER-02, SRH-AFTER-03"
+    )
     @GetMapping("/courses")
     public ResponseEntity<ApiResponse<List<CourseSearchResponse>>> searchCourses(
             HttpServletRequest httpServletRequest,

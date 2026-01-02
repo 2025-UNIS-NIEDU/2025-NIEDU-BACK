@@ -7,6 +7,8 @@ import com.niedu.global.response.ApiResponse;
 import com.niedu.repository.topic.TopicRepository;
 import com.niedu.repository.topic.UserTopicPreferenceRepository;
 import com.niedu.service.auth.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +23,16 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/onboard")
 @RequiredArgsConstructor
+@Tag(name = "온보딩", description = "온보딩 관련 API")
 public class OnboardController {
     private final AuthService authService;
     private final UserTopicPreferenceRepository userTopicPreferenceRepository;
     private final TopicRepository topicRepository;
 
+    @Operation(
+            summary = "선호 토픽 선택",
+            description = "FUNCTION ID: ONB-TOPIC-01~ONB-TOPIC-03"
+    )
     @PostMapping("/topics")
     public ResponseEntity<ApiResponse<?>> saveMyFavTopics(HttpServletRequest httpServletRequest,
                                                           @RequestBody ArrayList<String> topics){

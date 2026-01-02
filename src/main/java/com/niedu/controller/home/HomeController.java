@@ -29,7 +29,10 @@ public class HomeController {
     private final HomeService homeService;
     private final AuthService authService;
 
-    @Operation(summary = "오늘자 뉴스 조회", description = "HOM-HOME-02 명세서")
+    @Operation(
+            summary = "오전 8시 기준으로 자동 갱신된 최신 뉴스 중 2개 랜덤 응답",
+            description = "FUNCTION ID: HOM-HOME-02"
+    )
     @GetMapping("/news")
     public ResponseEntity<ApiResponse<?>> getHomeNews(
                                                        HttpServletRequest httpServletRequest
@@ -43,7 +46,10 @@ public class HomeController {
                 ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "오늘자 뉴스 조회에 실패했습니다."));
     }
 
-    @Operation(summary = "홈 내 코스 조회", description = "HOM-HOME-03/04/RECENT-01/SAVED-01 명세서")
+    @Operation(
+            summary = "홈 내 코스 조회 (type: recent/saved, view: all/preview)",
+            description = "FUNCTION ID: HOM-HOME-03, HOM-HOME-04, HOM-RECENT-01, HOM-SAVED-01"
+    )
     @GetMapping("/courses")
     public ResponseEntity<ApiResponse<?>> getHomeCourses(
                                                           HttpServletRequest httpServletRequest,

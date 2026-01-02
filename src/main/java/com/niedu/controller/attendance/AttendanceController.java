@@ -23,7 +23,10 @@ public class AttendanceController {
     private final AttendanceService attendanceService;
     private final AuthService authService;
 
-    @Operation(summary = "출석 상황 조회", description = "HOM-HOME-01/SET-ALL-01 명세서")
+    @Operation(
+            summary = "출석 상황 조회. 홈 화면과 설정 화면에서 공용으로 사용.",
+            description = "FUNCTION ID: HOM-HOME-01, SET-ALL-01"
+    )
     @GetMapping("/streak")
     public ResponseEntity<ApiResponse<?>> getAttendanceStreak(
                                                                HttpServletRequest httpServletRequest

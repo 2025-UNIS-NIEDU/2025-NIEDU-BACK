@@ -5,6 +5,8 @@ import com.niedu.entity.user.User;
 import com.niedu.global.response.ApiResponse;
 import com.niedu.service.auth.AuthService;
 import com.niedu.service.user.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,10 +18,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
+@Tag(name = "회원관리", description = "회원/인증 관련 API")
 public class UserController {
     private final AuthService authService;
     private final UserService userService;
 
+    @Operation(
+            summary = "회원 정보 조회. 홈 화면과 설정 화면에서 공용으로 사용.",
+            description = "FUNCTION ID: ONB-TOPIC-01, SET-ALL-01"
+    )
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<?>> getMyInfo(HttpServletRequest httpServletRequest) {
         User user = authService.getUserFromRequest(httpServletRequest);
