@@ -9,6 +9,7 @@ import com.niedu.global.response.ApiResponse;
 import com.niedu.service.auth.AuthService;
 import com.niedu.service.edu.StepService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,8 +35,11 @@ public class StepController {
     )
     @PostMapping("/{stepId}/answer")
     public ResponseEntity<ApiResponse<?>> submitStepAnswer(HttpServletRequest httpServletRequest,
+                                                           @Parameter(description = "코스 ID", required = true, example = "1")
                                                            @PathVariable("courseId") Long courseId,
+                                                           @Parameter(description = "세션 ID", required = true, example = "1")
                                                            @PathVariable("sessionId") Long sessionId,
+                                                           @Parameter(description = "스텝 ID", required = true, example = "1")
                                                            @PathVariable("stepId") Long stepId,
                                                            @RequestBody StepAnswerRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);
@@ -51,8 +55,11 @@ public class StepController {
     )
     @PostMapping("/{stepId}/share")
     public ResponseEntity<ApiResponse<?>> shareMyAnswer(HttpServletRequest httpServletRequest,
+                                                        @Parameter(description = "코스 ID", required = true, example = "1")
                                                         @PathVariable("courseId") Long courseId,
+                                                        @Parameter(description = "세션 ID", required = true, example = "1")
                                                         @PathVariable("sessionId") Long sessionId,
+                                                        @Parameter(description = "스텝 ID", required = true, example = "1")
                                                         @PathVariable("stepId") Long stepId,
                                                         ShareAnswerRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);
@@ -68,8 +75,11 @@ public class StepController {
     )
     @GetMapping("/{stepId}/shared-answers")
     public ResponseEntity<ApiResponse<?>> getSharedAnswers(HttpServletRequest httpServletRequest,
+                                                           @Parameter(description = "코스 ID", required = true, example = "1")
                                                            @PathVariable("courseId") Long courseId,
+                                                           @Parameter(description = "세션 ID", required = true, example = "1")
                                                            @PathVariable("sessionId") Long sessionId,
+                                                           @Parameter(description = "스텝 ID", required = true, example = "1")
                                                            @PathVariable("stepId") Long stepId) {
         User user = authService.getUserFromRequest(httpServletRequest);
         ArrayList<String> responses = stepService.getSharedAnswers(user, stepId);
@@ -84,8 +94,11 @@ public class StepController {
     )
     @PostMapping("{stepId}/submit-for-feedback")
     public ResponseEntity<ApiResponse<?>> submitStepAnswerForFeedback(HttpServletRequest httpServletRequest,
+                                                                      @Parameter(description = "코스 ID", required = true, example = "1")
                                                                       @PathVariable("courseId") Long courseId,
+                                                                      @Parameter(description = "세션 ID", required = true, example = "1")
                                                                       @PathVariable("sessionId") Long sessionId,
+                                                                      @Parameter(description = "스텝 ID", required = true, example = "1")
                                                                       @PathVariable("stepId") Long stepId,
                                                                       @RequestBody FeedbackAnswerRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);
@@ -101,8 +114,11 @@ public class StepController {
     )
     @PostMapping("/{stepId}/report")
     public ResponseEntity<ApiResponse<?>> reportErrorInFeedback(HttpServletRequest httpServletRequest,
+                                                                @Parameter(description = "코스 ID", required = true, example = "1")
                                                                 @PathVariable("courseId") Long courseId,
+                                                                @Parameter(description = "세션 ID", required = true, example = "1")
                                                                 @PathVariable("sessionId") Long sessionId,
+                                                                @Parameter(description = "스텝 ID", required = true, example = "1")
                                                                 @PathVariable("stepId") Long stepId,
                                                                 @RequestBody ReportFeedbackRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);

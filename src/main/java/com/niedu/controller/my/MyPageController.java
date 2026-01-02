@@ -54,8 +54,10 @@ public class MyPageController {
     @GetMapping("/calendar")
     public ResponseEntity<ApiResponse<MyCalendarResponse>> getCalendar(
             @Parameter(hidden = true) HttpServletRequest request,
-            @Parameter(description = "조회할 연도", required = true) @RequestParam Integer year,
-            @Parameter(description = "조회할 월", required = true) @RequestParam Integer month
+            @Parameter(description = "조회할 연도", required = true, example = "2025")
+            @RequestParam Integer year,
+            @Parameter(description = "조회할 월", required = true, example = "12")
+            @RequestParam Integer month
     ) {
         User user = authService.getUserFromRequest(request);
         MyCalendarResponse data = myPageService.getCalendar(user, year, month);
@@ -69,7 +71,7 @@ public class MyPageController {
     @GetMapping("/review-notes")
     public ResponseEntity<ApiResponse<List<ReviewNoteItemResponse>>> getReviewNotes(
             @Parameter(hidden = true) HttpServletRequest request,
-            @Parameter(description = "조회할 날짜 (YYYY-MM-DD)")
+            @Parameter(description = "조회할 날짜 (YYYY-MM-DD)", example = "2025-12-29")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         User user = authService.getUserFromRequest(request);
@@ -84,7 +86,7 @@ public class MyPageController {
     @GetMapping("/terms")
     public ResponseEntity<ApiResponse<MyTermListResponse>> getAllMyTerms(
             @Parameter(hidden = true) HttpServletRequest request,
-            @Parameter(description = "정렬 기준 (alphabetical, recent)", required = true)
+            @Parameter(description = "정렬 기준 (alphabetical, recent)", required = true, example = "recent")
             @RequestParam @Pattern(regexp = "alphabetical|recent", message = "sort 파라METER는 'alphabetical' 또는 'recent'만 가능합니다.") String sort
     ) {
         User user = authService.getUserFromRequest(request);
@@ -99,7 +101,8 @@ public class MyPageController {
     @GetMapping("/terms/{termId}")
     public ResponseEntity<ApiResponse<TermContent>> getMyTermById(
                                                                    @Parameter(hidden = true) HttpServletRequest request, // --- [수정] ---
-                                                                   @Parameter(description = "조회할 용어 ID", required = true) @PathVariable Long termId
+                                                                   @Parameter(description = "조회할 용어 ID", required = true, example = "10")
+                                                                   @PathVariable Long termId
     ) {
         User user = authService.getUserFromRequest(request);
         TermContent data = myPageService.getMyTermById(user, termId);

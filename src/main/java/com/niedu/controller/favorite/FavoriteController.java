@@ -8,6 +8,7 @@ import com.niedu.global.response.ApiResponse;
 import com.niedu.service.auth.AuthService;
 import com.niedu.service.favorite.FavoriteService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,7 +56,9 @@ public class FavoriteController {
     )
     @GetMapping("/{type}/{targetId}")
     public ResponseEntity<ApiResponse<?>> checkIsFavorite(HttpServletRequest httpServletRequest,
+                                                          @Parameter(description = "즐겨찾기 유형: COURSE 또는 TERM", required = true, example = "COURSE")
                                                           @PathVariable("type") FavoriteType type,
+                                                          @Parameter(description = "즐겨찾기 대상 식별자", required = true, example = "100")
                                                           @PathVariable("targetId") Long targetId) {
         User user = authService.getUserFromRequest(httpServletRequest);
         IsFavoriteResponse response = favoriteService.checkIsFavorite(user, type, targetId);

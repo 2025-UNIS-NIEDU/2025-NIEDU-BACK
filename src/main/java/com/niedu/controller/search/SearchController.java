@@ -50,7 +50,8 @@ public class SearchController {
     )
     @DeleteMapping("/history/{logId}")
     public ResponseEntity<ApiResponse<?>> deleteSearchHistory(
-            @Parameter(description = "삭제할 검색 기록 ID", required = true) @PathVariable Long logId
+            @Parameter(description = "삭제할 검색 기록 ID", required = true, example = "123")
+            @PathVariable Long logId
     ) {
 
         searchService.deleteSearchHistory(logId);
@@ -74,12 +75,17 @@ public class SearchController {
     @GetMapping("/courses")
     public ResponseEntity<ApiResponse<List<CourseSearchResponse>>> searchCourses(
             HttpServletRequest httpServletRequest,
-            @Parameter(description = "검색할 키워드", required = true) @RequestParam @NotBlank String keyword,
-            @Parameter(description = "정렬 기준: `recent` (최신순) 또는 `popular` (인기순)", required = true)
+            @Parameter(description = "검색할 키워드", required = true, example = "경제")
+            @RequestParam @NotBlank String keyword,
+            @Parameter(
+                    description = "정렬 기준: `recent` (최신순) 또는 `popular` (인기순)",
+                    required = true,
+                    example = "recent"
+            )
             @RequestParam @Pattern(regexp = "recent|popular", message = "sort 파라미터는 'recent' 또는 'popular'만 가능합니다.") String sort,
-            @Parameter(description = "페이지 번호 (0부터 시작)")
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 당 항목 수")
+            @Parameter(description = "페이지 당 항목 수", example = "10")
             @RequestParam(defaultValue = "10") int size
     ) {
         User user = authService.getUserFromRequest(httpServletRequest);

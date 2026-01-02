@@ -7,6 +7,7 @@ import com.niedu.global.response.ApiResponse;
 import com.niedu.service.auth.AuthService;
 import com.niedu.service.edu.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,9 +33,27 @@ public class CourseController {
     )
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getCourses(HttpServletRequest httpServletRequest,
+                                                     @Parameter(
+                                                             description = "코스 타입: RECENT/POPULAR/CUSTOM/NEW",
+                                                             required = true,
+                                                             example = "RECENT"
+                                                     )
                                                      @RequestParam("type") String type,
+                                                     @Parameter(
+                                                             description = "뷰 타입: PREVIEW/ALL",
+                                                             required = true,
+                                                             example = "PREVIEW"
+                                                     )
                                                      @RequestParam("view") String view,
+                                                     @Parameter(
+                                                             description = "토픽: 정치/경제/사회/국제 (선택)",
+                                                             example = "경제"
+                                                     )
                                                      @RequestParam(value = "topic", required = false) String topic,
+                                                     @Parameter(
+                                                             description = "페이지 번호 (무한스크롤용, 0부터 시작)",
+                                                             example = "0"
+                                                     )
                                                      @RequestParam(defaultValue = "0", required = false) Integer page) {
         User user = authService.getUserFromRequest(httpServletRequest);
         ArrayList<CourseListResponse> responses = courseService.getCourses(user, type, view, topic, page);
@@ -49,6 +68,11 @@ public class CourseController {
     )
     @GetMapping("/{courseId}")
     public ResponseEntity<ApiResponse<?>> getCourse(HttpServletRequest httpServletRequest,
+                                                    @Parameter(
+                                                            description = "코스 ID",
+                                                            required = true,
+                                                            example = "1"
+                                                    )
                                                     @PathVariable("courseId") Long courseId) {
         User user = authService.getUserFromRequest(httpServletRequest);
         CourseResponse response = courseService.getCourse(user, courseId);

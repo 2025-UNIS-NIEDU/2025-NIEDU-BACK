@@ -55,9 +55,17 @@ public class HomeController {
     @GetMapping("/courses")
     public ResponseEntity<ApiResponse<?>> getHomeCourses(
                                                           HttpServletRequest httpServletRequest,
-                                                          @Parameter(description = "코스 타입: `recent` 또는 `saved`", required = true)
+                                                          @Parameter(
+                                                                  description = "코스 타입: `recent` 또는 `saved`",
+                                                                  required = true,
+                                                                  example = "recent"
+                                                          )
                                                           @RequestParam @Pattern(regexp = "recent|saved") String type,
-                                                          @Parameter(description = "뷰 타입: `preview` 또는 `all`", required = true)
+                                                          @Parameter(
+                                                                  description = "뷰 타입: `preview` 또는 `all`",
+                                                                  required = true,
+                                                                  example = "preview"
+                                                          )
                                                           @RequestParam @Pattern(regexp = "preview|all") String view
     ) {
         User user = authService.getUserFromRequest(httpServletRequest);

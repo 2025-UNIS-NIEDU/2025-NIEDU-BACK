@@ -9,6 +9,7 @@ import com.niedu.global.response.ApiResponse;
 import com.niedu.service.auth.AuthService;
 import com.niedu.service.edu.SessionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,7 +34,9 @@ public class SessionController {
             description = "FUNCTION ID: EDU-DETAIL-05"
     )
     @GetMapping("")
-    public ResponseEntity<ApiResponse<?>> getSessions(@PathVariable("courseId") Long courseId) {
+    public ResponseEntity<ApiResponse<?>> getSessions(
+            @Parameter(description = "코스 ID", required = true, example = "1")
+            @PathVariable("courseId") Long courseId) {
         ArrayList<SessionListResponse> responses = sessionService.getSessions(courseId);
         return (responses != null)?
                 ResponseEntity.ok(ApiResponse.success(responses)):
@@ -46,6 +49,9 @@ public class SessionController {
     )
     @PostMapping("/{sessionId}/start")
     public ResponseEntity<ApiResponse<?>> startSession(HttpServletRequest httpServletRequest,
+                                                       @Parameter(description = "코스 ID", required = true, example = "1")
+                                                       @PathVariable("courseId") Long courseId,
+                                                       @Parameter(description = "세션 ID", required = true, example = "1")
                                                        @PathVariable("sessionId") Long sessionId,
                                                        @RequestBody LevelRequest request) {
         User user = authService.getUserFromRequest(httpServletRequest);
@@ -61,6 +67,9 @@ public class SessionController {
     )
     @PostMapping("/{sessionId}/quit")
     public ResponseEntity<ApiResponse<?>> quitSession(HttpServletRequest httpServletRequest,
+                                                       @Parameter(description = "코스 ID", required = true, example = "1")
+                                                       @PathVariable("courseId") Long courseId,
+                                                       @Parameter(description = "세션 ID", required = true, example = "1")
                                                        @PathVariable("sessionId") Long sessionId) {
         User user = authService.getUserFromRequest(httpServletRequest);
         sessionService.quitSession(user, sessionId);
@@ -73,6 +82,9 @@ public class SessionController {
     )
     @GetMapping("/{sessionId}/summary")
     public ResponseEntity<ApiResponse<?>> summarizeSession(HttpServletRequest httpServletRequest,
+                                                           @Parameter(description = "코스 ID", required = true, example = "1")
+                                                           @PathVariable("courseId") Long courseId,
+                                                           @Parameter(description = "세션 ID", required = true, example = "1")
                                                            @PathVariable("sessionId") Long sessionId) {
         User user = authService.getUserFromRequest(httpServletRequest);
         SessionSummaryResponse response = sessionService.summarizeSession(user, sessionId);
