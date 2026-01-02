@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.niedu.service.edu.AIService;
 
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.Hidden;
 
+@Hidden
 @RestController
 @RequiredArgsConstructor
 public class TestController {

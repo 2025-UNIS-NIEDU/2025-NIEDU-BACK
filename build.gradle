@@ -20,6 +20,14 @@ configurations {
 	}
 }
 
+configurations.all {
+	resolutionStrategy {
+		force 'org.springdoc:springdoc-openapi-starter-common:2.7.0'
+		force 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.7.0'
+		force 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+	}
+}
+
 repositories {
 	mavenCentral()
 }
@@ -41,7 +49,7 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 	implementation 'io.sentry:sentry-spring-boot-starter-jakarta'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
