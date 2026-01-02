@@ -11,6 +11,7 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
+                .openapi("3.0.1")
                 .info(new Info()
                         .title("NIEdu API")
                         .description("NIEdu API 명세서")
