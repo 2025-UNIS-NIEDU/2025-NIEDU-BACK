@@ -8,6 +8,9 @@ import com.niedu.service.auth.AuthService;
 import com.niedu.service.home.HomeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,6 +38,31 @@ public class HomeController {
             summary = "오전 8시 기준으로 자동 갱신된 최신 뉴스 중 2개 랜덤 응답",
             description = "FUNCTION ID: HOM-HOME-02"
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "OK",
+                    content = @Content(schema = @Schema(
+                            implementation = com.niedu.global.response.ApiResponse.class,
+                            description = "data: List<HomeNewsRecord>"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            )
+    })
     @GetMapping("/news")
     public ResponseEntity<ApiResponse<?>> getHomeNews(
                                                        HttpServletRequest httpServletRequest
@@ -52,6 +80,36 @@ public class HomeController {
             summary = "홈 내 코스 조회 (type: recent/saved, view: all/preview)",
             description = "FUNCTION ID: HOM-HOME-03, HOM-HOME-04, HOM-RECENT-01, HOM-SAVED-01"
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "OK",
+                    content = @Content(schema = @Schema(
+                            implementation = com.niedu.global.response.ApiResponse.class,
+                            description = "data: List<HomeCourseRecord>"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Bad Request",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            )
+    })
     @GetMapping("/courses")
     public ResponseEntity<ApiResponse<?>> getHomeCourses(
                                                           HttpServletRequest httpServletRequest,

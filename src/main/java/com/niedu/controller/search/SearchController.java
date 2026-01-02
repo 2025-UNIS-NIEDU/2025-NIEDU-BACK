@@ -8,6 +8,9 @@ import com.niedu.service.auth.AuthService;
 import com.niedu.service.search.SearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +39,31 @@ public class SearchController {
             summary = "이전 검색어 목록 조회",
             description = "FUNCTION ID: SRH-BEFORE-02, SRH-BEFORE-03"
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "OK",
+                    content = @Content(schema = @Schema(
+                            implementation = com.niedu.global.response.ApiResponse.class,
+                            description = "data: List<SearchHistoryResponse>"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            )
+    })
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<List<SearchHistoryResponse>>> getSearchHistory(HttpServletRequest httpServletRequest) {
         User user = authService.getUserFromRequest(httpServletRequest);
@@ -48,6 +76,36 @@ public class SearchController {
             summary = "이전 검색어 목록에서 특정 항목 삭제",
             description = "FUNCTION ID: 없음"
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "OK",
+                    content = @Content(schema = @Schema(
+                            implementation = com.niedu.global.response.ApiResponse.class,
+                            description = "data: null"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Bad Request",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            )
+    })
     @DeleteMapping("/history/{logId}")
     public ResponseEntity<ApiResponse<?>> deleteSearchHistory(
             @Parameter(description = "삭제할 검색 기록 ID", required = true, example = "123")
@@ -62,6 +120,31 @@ public class SearchController {
             summary = "추천 검색어 목록 조회",
             description = "FUNCTION ID: SRH-BEFORE-01"
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "OK",
+                    content = @Content(schema = @Schema(
+                            implementation = com.niedu.global.response.ApiResponse.class,
+                            description = "data: List<String>"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            )
+    })
     @GetMapping("/suggestions")
     public ResponseEntity<ApiResponse<List<String>>> getSearchSuggestions() {
         List<String> response = searchService.getSearchSuggestions();
@@ -72,6 +155,36 @@ public class SearchController {
             summary = "코스 검색 결과 조회 (sort: recent/popular)",
             description = "FUNCTION ID: SRH-AFTER-02, SRH-AFTER-03"
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "OK",
+                    content = @Content(schema = @Schema(
+                            implementation = com.niedu.global.response.ApiResponse.class,
+                            description = "data: List<CourseSearchResponse>"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Bad Request",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            )
+    })
     @GetMapping("/courses")
     public ResponseEntity<ApiResponse<List<CourseSearchResponse>>> searchCourses(
             HttpServletRequest httpServletRequest,

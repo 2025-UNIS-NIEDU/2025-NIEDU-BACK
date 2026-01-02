@@ -6,6 +6,9 @@ import com.niedu.global.response.ApiResponse;
 import com.niedu.service.auth.AuthService;
 import com.niedu.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,6 +32,31 @@ public class UserController {
             summary = "회원 정보 조회. 홈 화면과 설정 화면에서 공용으로 사용.",
             description = "FUNCTION ID: ONB-TOPIC-01, SET-ALL-01"
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "OK",
+                    content = @Content(schema = @Schema(
+                            implementation = com.niedu.global.response.ApiResponse.class,
+                            description = "data: UserInfoResponse"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(schema = @Schema(implementation = com.niedu.global.response.ApiResponse.class))
+            )
+    })
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<?>> getMyInfo(HttpServletRequest httpServletRequest) {
         User user = authService.getUserFromRequest(httpServletRequest);
