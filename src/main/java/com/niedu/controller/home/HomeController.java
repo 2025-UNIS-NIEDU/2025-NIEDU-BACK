@@ -8,6 +8,7 @@ import com.niedu.service.auth.AuthService;
 import com.niedu.service.home.HomeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Pattern;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(name = "2. 홈 (Home)", description = "홈 화면 관련 API")
+@SecurityRequirement(name = "accessToken")
 @RestController
 @RequestMapping("/api/home")
 @RequiredArgsConstructor

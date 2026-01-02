@@ -8,6 +8,7 @@ import com.niedu.repository.topic.TopicRepository;
 import com.niedu.repository.topic.UserTopicPreferenceRepository;
 import com.niedu.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.Objects;
 @RequestMapping("/api/onboard")
 @RequiredArgsConstructor
 @Tag(name = "온보딩", description = "온보딩 관련 API")
+@SecurityRequirement(name = "accessToken")
 public class OnboardController {
     private final AuthService authService;
     private final UserTopicPreferenceRepository userTopicPreferenceRepository;

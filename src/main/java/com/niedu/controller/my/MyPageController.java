@@ -10,6 +10,7 @@ import com.niedu.service.auth.AuthService;
 import com.niedu.service.my.MyPageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Pattern;
@@ -23,6 +24,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Tag(name = "8. 마이페이지 (My Page)", description = "캘린더, 복습노트, 용어사전 관련 API")
+@SecurityRequirement(name = "accessToken")
 @RestController
 @RequestMapping("/api/my")
 @RequiredArgsConstructor

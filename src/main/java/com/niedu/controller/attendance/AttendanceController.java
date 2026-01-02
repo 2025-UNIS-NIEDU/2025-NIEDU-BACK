@@ -5,6 +5,7 @@ import com.niedu.service.user.AttendanceService;
 import com.niedu.service.auth.AuthService;
 import com.niedu.entity.user.User;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "출석", description = "출석 관련 API")
+@SecurityRequirement(name = "accessToken")
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor

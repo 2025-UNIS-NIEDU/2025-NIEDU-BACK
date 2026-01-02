@@ -8,6 +8,7 @@ import com.niedu.global.response.ApiResponse;
 import com.niedu.service.auth.AuthService;
 import com.niedu.service.favorite.FavoriteService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/favorites")
 @RequiredArgsConstructor
 @Tag(name = "즐겨찾기", description = "코스/용어 즐겨찾기 관련 API")
+@SecurityRequirement(name = "accessToken")
 public class FavoriteController {
     private final AuthService authService;
     private final FavoriteService favoriteService;

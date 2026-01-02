@@ -9,6 +9,7 @@ import com.niedu.global.response.ApiResponse;
 import com.niedu.service.auth.AuthService;
 import com.niedu.service.edu.StepService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 @RequestMapping("/api/edu/courses/{courseId}/sessions/{sessionId}/steps")
 @RequiredArgsConstructor
 @Tag(name = "학습", description = "코스/세션/스텝 학습 관련 API")
+@SecurityRequirement(name = "accessToken")
 public class StepController {
     private final StepService stepService;
     private final AuthService authService;
