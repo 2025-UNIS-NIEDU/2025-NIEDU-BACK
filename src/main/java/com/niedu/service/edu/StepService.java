@@ -14,9 +14,9 @@ import com.niedu.entity.learning_record.StudiedStep;
 import com.niedu.entity.learning_record.user_answer.UserAnswer;
 import com.niedu.entity.user.User;
 import com.niedu.repository.admin.AIErrorReportRepository;
+import com.niedu.repository.content.ContentRepository;
 import com.niedu.repository.learning_record.SharedResponseRepository;
 import com.niedu.repository.learning_record.StudiedStepRepository;
-import com.niedu.repository.learning_record.UserAnswerRepository;
 import com.niedu.service.edu.user_answer.UserAnswerMapperService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,7 +32,7 @@ public class StepService {
     private final UserAnswerMapperService userAnswerMapperService;
     private final AIService aiService;
     private final StudiedStepRepository studiedStepRepository;
-    private final UserAnswerRepository userAnswerRepository;
+    private final ContentRepository contentRepository;
     private final SharedResponseRepository sharedResponseRepository;
     private final AIErrorReportRepository aiErrorReportRepository;
     private final ObjectMapper objectMapper;
@@ -72,7 +72,13 @@ public class StepService {
     }
 
     public FeedbackAnswerResponse submitStepAnswerForFeedback(User user, Long stepId, FeedbackAnswerRequest request) {
-        FeedbackAnswerResponse response = aiService.submitStepAnswerForFeedback(user, stepId, request);
+        String referenceAnswer = contentRepository.findSentenceCompletionReferenceAnswer(stepId, request.contentId())
+                .orElseThrow(() -> new IllegalArgumentException("Reference answer not found for contentId: " + request.contentId()));
+        FeedbackAnswerResponse response = aiService.submitStepAnswerForFeedback(
+                request.contentId(),
+                request.userAnswer(),
+                referenceAnswer
+        );
         return response;
     }
 

@@ -22,10 +22,10 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.niedu.dto.course.FeedbackAnswerRequest;
 import com.niedu.dto.course.FeedbackAnswerResponse;
 import com.niedu.dto.course.ai.AICourseListResponse;
 import com.niedu.dto.course.ai.AICourseResponse;
+import com.niedu.dto.course.ai.AIFeedbackRequest;
 import com.niedu.dto.course.ai.AIQuizResponse;
 import com.niedu.dto.course.ai.AISessionResponse;
 import com.niedu.dto.course.ai.AIStepResponse;
@@ -38,7 +38,6 @@ import com.niedu.entity.course.Session;
 import com.niedu.entity.course.Step;
 import com.niedu.entity.topic.SubTopic;
 import com.niedu.entity.topic.Topic;
-import com.niedu.entity.user.User;
 import com.niedu.repository.content.ContentRepository;
 import com.niedu.repository.content.NewsRefRepository;
 import com.niedu.repository.course.CourseRepository;
@@ -79,8 +78,14 @@ public class AIService {
     @Value("${external.ai-server.api-key}")
     private String aiServerApiKey;
 
-    public FeedbackAnswerResponse submitStepAnswerForFeedback(User user, Long stepId, FeedbackAnswerRequest request) {
+    public FeedbackAnswerResponse submitStepAnswerForFeedback(Long contentId, String userAnswer, String referenceAnswer) {
         String url = aiServerUrl + "/api/feedback";
+        
+        AIFeedbackRequest request = new AIFeedbackRequest(
+                contentId,
+                referenceAnswer,
+                userAnswer
+            );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
