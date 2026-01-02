@@ -9,6 +9,7 @@ import com.niedu.repository.topic.UserTopicPreferenceRepository;
 import com.niedu.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -37,6 +38,14 @@ public class OnboardController {
     @Operation(
             summary = "선호 토픽 선택",
             description = "FUNCTION ID: ONB-TOPIC-01~ONB-TOPIC-03"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "선호 토픽 목록",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "[\"경제\",\"정치\"]")
+            )
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(

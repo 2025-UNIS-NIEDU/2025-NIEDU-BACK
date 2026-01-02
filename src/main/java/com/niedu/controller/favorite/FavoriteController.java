@@ -10,6 +10,7 @@ import com.niedu.service.favorite.FavoriteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -32,6 +33,14 @@ public class FavoriteController {
     @Operation(
             summary = "즐겨찾기 추가",
             description = "FUNCTION ID: SRH-AFTER-03, EDU-DETAIL-02, EDU-QUIZ-02-N-01, EDU-QUIZ-02-N-02, SET-DICTIONARY-04"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "즐겨찾기 추가 요청",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"type\":\"COURSE\",\"targetId\":100}")
+            )
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -79,6 +88,14 @@ public class FavoriteController {
     @Operation(
             summary = "즐겨찾기 삭제",
             description = "FUNCTION ID: SRH-AFTER-03, EDU-DETAIL-02, EDU-QUIZ-02-N-01, EDU-QUIZ-02-N-02, SET-DICTIONARY-04"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "즐겨찾기 삭제 요청",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"type\":\"COURSE\",\"targetId\":100}")
+            )
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(

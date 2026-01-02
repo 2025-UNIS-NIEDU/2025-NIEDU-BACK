@@ -11,6 +11,7 @@ import com.niedu.service.edu.StepService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -35,6 +36,14 @@ public class StepController {
     @Operation(
             summary = "현재 STEP 사용자 응답 저장",
             description = "FUNCTION ID: EDU-QUIZ-GNB"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "STEP 사용자 응답",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"contentType\":\"SENTENCE_COMPLETION\",\"userAnswer\":\"...\"}")
+            )
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -185,6 +194,14 @@ public class StepController {
             summary = "문장 완성 문제 STEP - 사용자 답안 제출 및 피드백 조회",
             description = "FUNCTION ID: EDU-QUIZ-09-E-01, EDU-QUIZ-09-E-02"
     )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "문장 완성형 답안 제출",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"contentId\":123,\"userAnswer\":\"answer text\"}")
+            )
+    )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
@@ -234,6 +251,14 @@ public class StepController {
     @Operation(
             summary = "문장 완성 문제 STEP - AI 답변 오류 제보하기",
             description = "FUNCTION ID: EDU-QUIZ-09-E-03"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "오류 제보 대상 콘텐츠 ID",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"contentId\":123}")
+            )
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(

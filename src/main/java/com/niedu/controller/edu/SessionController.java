@@ -11,6 +11,7 @@ import com.niedu.service.edu.SessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -79,6 +80,14 @@ public class SessionController {
     @Operation(
             summary = "특정 코스 내 특정 세션 시작 (step 메타데이터/진입점 step 정보)",
             description = "FUNCTION ID: EDU-QUIZ-STEP-03"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "학습 난이도 요청",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"level\":\"N\"}")
+            )
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
