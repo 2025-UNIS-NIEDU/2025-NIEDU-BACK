@@ -79,7 +79,7 @@ public class AIService {
     private String aiServerApiKey;
 
     public FeedbackAnswerResponse submitStepAnswerForFeedback(Long contentId, String userAnswer, String referenceAnswer) {
-        String url = aiServerUrl + "/api/feedback";
+        String url = aiServerUrl + "/api/quiz/feedback";
         
         AIFeedbackRequest request = new AIFeedbackRequest(
                 contentId,
