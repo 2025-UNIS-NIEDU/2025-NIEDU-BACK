@@ -5,6 +5,11 @@ import com.niedu.repository.user.RefreshTokenRepository;
 import com.niedu.security.CookieUtils;
 import com.niedu.security.TokenCookieSupport;
 import com.niedu.security.jwt.JwtUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +27,7 @@ import java.util.Date;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
+@Tag(name = "회원관리", description = "회원/인증 관련 API")
 public class AuthController {
 
     private final JwtUtil jwtUtil;
@@ -33,6 +39,24 @@ public class AuthController {
     @Value("${app.cookie.domain:}")
     private String cookieDomain;
 
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "OK",
+                    content = @Content(schema = @Schema(implementation = Void.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = Void.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(schema = @Schema(implementation = Void.class))
+            )
+    })
+    @Operation(summary = "액세스 토큰 재발급", description = "FUNCTION ID: 없음")
     @PostMapping("/reissue-access-token")
     public void reissueAccessToken(HttpServletRequest request, HttpServletResponse response) {
         try {
