@@ -1,26 +1,28 @@
 package com.niedu.security.oauth;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.niedu.entity.user.RefreshToken;
 import com.niedu.entity.user.User;
 import com.niedu.repository.user.RefreshTokenRepository;
 import com.niedu.repository.user.UserRepository;
 import com.niedu.security.TokenCookieSupport;
 import com.niedu.security.jwt.JwtUtil;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
@@ -33,8 +35,14 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
     @Value("${jwt.refresh-token.expiration-time}")
     private long REFRESH_TOKEN_EXPIRATION_TIME;
 
-    @Value("${app.frontend.redirect-url}")
-    private String frontendRedirectUrl;
+    @Value("${app.frontend.redirect-url.local:${app.frontend.redirect-url}}")
+    private String frontendRedirectUrlLocal;
+
+    @Value("${app.frontend.redirect-url.vercel:${app.frontend.redirect-url}}")
+    private String frontendRedirectUrlVercel;
+
+    @Value("${app.frontend.redirect-url.prod:${app.frontend.redirect-url}}")
+    private String frontendRedirectUrlProd;
 
     @Value("${app.cookie.domain:}")
     private String cookieDomain;
@@ -91,16 +99,20 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
         );
 
         // 1. 요청 서버명 기준으로 로컬/운영 판별
-        boolean isLocal = TokenCookieSupport.isLocalRequest(request);
+        boolean isLocalRequest = TokenCookieSupport.isLocalRequest(request);
 
-        // 2. 프론트엔드 Redirect URL 결정
-        String redirectUrl = frontendRedirectUrl;
+        // 2. 클라이언트 파라미터 기준으로 분기 (local|vercel|prod)
+        String clientParam = request.getParameter("client");
+        FrontendClient frontendClient = resolveFrontendClient(clientParam, isLocalRequest);
 
-        if (isLocal) {
-            // 3. 로컬 환경: 토큰을 쿼리 파라미터로 전달
+        // 3. 프론트엔드 Redirect URL 결정
+        String redirectUrl = resolveRedirectUrl(frontendClient);
+
+        if (frontendClient == FrontendClient.LOCAL) {
+            // 4. 로컬 환경: 토큰을 쿼리 파라미터로 전달
             redirectUrl = buildRedirectUrlWithTokens(redirectUrl, accessToken, refreshToken);
         } else {
-            // 4. 운영 환경: 쿠키로 전달 (SameSite=None, Secure)
+            // 5. 운영/버셀 환경: 쿠키로 전달 (SameSite=None, Secure)
             String domain = normalizeCookieDomain(cookieDomain);
             boolean secureFlag = true;
             String sameSite = "None";
@@ -131,7 +143,8 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
                 - kakaoId: {}
                 - redirect: {}
                 - mode: {}
-                """, kakaoId, redirectUrl, isLocal ? "LOCAL(쿼리 전달)" : "PROD(쿠키 전달, SameSite=None)");
+                - client: {}
+                """, kakaoId, redirectUrl, frontendClient, clientParam);
 
         // 리다이렉트
         if (!response.isCommitted()) {
@@ -147,11 +160,38 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
         return baseUrl + "?accessToken=" + encodedAccessToken + "&refreshToken=" + encodedRefreshToken;
     }
 
+    private FrontendClient resolveFrontendClient(String clientParam, boolean isLocalRequest) {
+        if (clientParam == null || clientParam.isBlank()) {
+            return isLocalRequest ? FrontendClient.LOCAL : FrontendClient.PROD;
+        }
+        String normalized = clientParam.trim().toLowerCase();
+        return switch (normalized) {
+            case "local" -> FrontendClient.LOCAL;
+            case "vercel" -> FrontendClient.VERCEL;
+            case "prod" -> FrontendClient.PROD;
+            default -> isLocalRequest ? FrontendClient.LOCAL : FrontendClient.PROD;
+        };
+    }
+
+    private String resolveRedirectUrl(FrontendClient frontendClient) {
+        return switch (frontendClient) {
+            case LOCAL -> frontendRedirectUrlLocal;
+            case VERCEL -> frontendRedirectUrlVercel;
+            case PROD -> frontendRedirectUrlProd;
+        };
+    }
+
     private String normalizeCookieDomain(String domain) {
         if (domain == null || domain.isBlank()) {
             return null;
         }
         String trimmed = domain.trim();
         return trimmed.startsWith(".") ? trimmed.substring(1) : trimmed;
+    }
+
+    private enum FrontendClient {
+        LOCAL,
+        VERCEL,
+        PROD
     }
 }
