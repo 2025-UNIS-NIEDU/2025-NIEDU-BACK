@@ -2,6 +2,7 @@ package com.niedu.config;
 
 import com.niedu.security.jwt.JwtAuthenticationFilter;
 import com.niedu.security.jwt.JwtUtil;
+import com.niedu.security.oauth.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.niedu.security.oauth.OAuthLoginFailureHandler;
 import com.niedu.security.oauth.OAuthLoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final OAuthLoginSuccessHandler oAuthLoginSuccessHandler;
     private final OAuthLoginFailureHandler oAuthLoginFailureHandler;
+    private final HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
 
     @Bean
     public CorsFilter corsFilter() {
@@ -77,6 +79,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
+                        .authorizationEndpoint(authorization -> authorization
+                                .authorizationRequestRepository(authorizationRequestRepository)
+                        )
                         .successHandler(oAuthLoginSuccessHandler)
                         .failureHandler(oAuthLoginFailureHandler)
                 )

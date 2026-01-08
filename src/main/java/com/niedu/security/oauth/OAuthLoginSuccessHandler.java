@@ -50,6 +50,7 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
 
     @Override
     @Transactional
@@ -102,7 +103,7 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
         boolean isLocalRequest = TokenCookieSupport.isLocalRequest(request);
 
         // 2. 클라이언트 파라미터 기준으로 분기 (local|vercel|prod)
-        String clientParam = request.getParameter("client");
+        String clientParam = authorizationRequestRepository.resolveClientParam(request);
         FrontendClient frontendClient = resolveFrontendClient(clientParam, isLocalRequest);
 
         // 3. 프론트엔드 Redirect URL 결정
