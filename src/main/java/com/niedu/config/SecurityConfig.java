@@ -1,11 +1,7 @@
 package com.niedu.config;
 
-import com.niedu.security.jwt.JwtAuthenticationFilter;
-import com.niedu.security.jwt.JwtUtil;
-import com.niedu.security.oauth.HttpCookieOAuth2AuthorizationRequestRepository;
-import com.niedu.security.oauth.OAuthLoginFailureHandler;
-import com.niedu.security.oauth.OAuthLoginSuccessHandler;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,7 +20,13 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import java.util.List;
+import com.niedu.security.jwt.JwtAuthenticationFilter;
+import com.niedu.security.jwt.JwtUtil;
+import com.niedu.security.oauth.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.niedu.security.oauth.OAuthLoginFailureHandler;
+import com.niedu.security.oauth.OAuthLoginSuccessHandler;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -44,6 +46,8 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
                 "http://localhost:3000",
+                "https://2025-niedu-front.vercel.app",
+                "https://www.niedu-service.com",
                 "https://niedu-service.com",
                 "https://api.niedu-service.com"
         ));
