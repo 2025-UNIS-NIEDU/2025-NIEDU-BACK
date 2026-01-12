@@ -17,6 +17,7 @@ import com.niedu.repository.admin.AIErrorReportRepository;
 import com.niedu.repository.content.ContentRepository;
 import com.niedu.repository.learning_record.SharedResponseRepository;
 import com.niedu.repository.learning_record.StudiedStepRepository;
+import com.niedu.repository.course.StepRepository;
 import com.niedu.service.edu.user_answer.UserAnswerMapperService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,21 +33,33 @@ public class StepService {
     private final UserAnswerMapperService userAnswerMapperService;
     private final AIService aiService;
     private final StudiedStepRepository studiedStepRepository;
+    private final StepRepository stepRepository;
     private final ContentRepository contentRepository;
     private final SharedResponseRepository sharedResponseRepository;
     private final AIErrorReportRepository aiErrorReportRepository;
     private final ObjectMapper objectMapper;
 
     public AnswerResponse submitStepAnswer(User user, Long stepId, StepAnswerRequest request) {
-        // 1. UserAnswer entity 저장
+        // 1. StudiedStep 확보 (세션 시작 없이 답안이 들어오는 경우 대비)
         StudiedStep studiedStep = studiedStepRepository.findByUserAndStep_Id(user, stepId);
+        if (studiedStep == null) {
+            Step step = stepRepository.findById(stepId)
+                    .orElseThrow(() -> new IllegalArgumentException("Step not found: " + stepId));
+            studiedStep = StudiedStep.builder()
+                    .user(user)
+                    .step(step)
+                    .isCompleted(false)
+                    .build();
+            studiedStep = studiedStepRepository.save(studiedStep);
+        }
+        // 2. UserAnswer entity 저장
         StepType stepType = resolveStepType(studiedStep, request);
         AnswerResponse userAnswer = mapUserAnswer(stepType, request.userAnswer());
         List<UserAnswer> userAnswers = userAnswerMapperService.toEntities(studiedStep, userAnswer);
-        // 2. StudiedStep 업데이트
+        // 3. StudiedStep 업데이트
         studiedStep.setIsCompleted(true);
         studiedStepRepository.save(studiedStep);
-        // 3. 리턴
+        // 4. 리턴
         return userAnswerMapperService.toResponse(studiedStep);
     }
 

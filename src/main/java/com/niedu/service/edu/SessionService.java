@@ -122,6 +122,7 @@ public class SessionService {
         // ---------- [이전에 학습한 적 있음] ----------
         sessionLog.setStartTime(LocalDateTime.now());
         sessionLog.setEndTime(null);
+        updateProgress(user, sessionId, sessionLog);
         StudiedSession savedStudiedSession = studiedSessionRepository.save(sessionLog);
 
         // StudiedStep 불러오기
