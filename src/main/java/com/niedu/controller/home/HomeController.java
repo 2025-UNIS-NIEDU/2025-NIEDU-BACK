@@ -35,7 +35,7 @@ public class HomeController {
     private final AuthService authService;
 
     @Operation(
-            summary = "오전 8시 기준으로 자동 갱신된 최신 뉴스 중 2개 랜덤 응답",
+            summary = "최신 세션 중 2개 랜덤 응답",
             description = "FUNCTION ID: HOM-HOME-02"
     )
     @ApiResponses({
@@ -73,7 +73,7 @@ public class HomeController {
 
         return (responses != null) ?
                 ResponseEntity.ok(ApiResponse.success(responses)) :
-                ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "오늘자 뉴스 조회에 실패했습니다."));
+                ResponseEntity.internalServerError().body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "홈 뉴스 조회에 실패했습니다."));
     }
 
     @Operation(
