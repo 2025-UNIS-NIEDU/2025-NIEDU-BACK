@@ -1,14 +1,13 @@
 package com.niedu.dto.home;
 
 import com.niedu.entity.course.Course;
-import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.data.domain.Page;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "홈 화면 코스 정보 Record")
 public record HomeCourseRecord (
+        @Schema(description= "ID")
+        Long id,
         @Schema(description = "썸네일 URL")
         String thumbnailUrl,
         @Schema(description = "코스 제목")
@@ -20,6 +19,7 @@ public record HomeCourseRecord (
 ){
     public static HomeCourseRecord fromEntity(Course course) {
         return new HomeCourseRecord(
+                course.getId(),
                 course.getThumbnailUrl(),
                 course.getTitle(),
                 course.getDescription(),
