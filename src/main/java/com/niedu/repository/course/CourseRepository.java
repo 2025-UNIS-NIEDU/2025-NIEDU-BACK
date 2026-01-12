@@ -56,4 +56,70 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     Page<Course> findAllByOrderByCreatedAtDesc(Pageable pageable);
     Page<Course> findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(String keyword, Pageable pageable);
     Page<Course> findByTitleContainingIgnoreCaseOrderByViewCountDesc(String keyword, Pageable pageable);
+
+    @Query(
+        value = """
+            SELECT DISTINCT c
+            FROM Course c
+            LEFT JOIN c.topic t
+            LEFT JOIN CourseSubTag cst ON cst.course = c
+            LEFT JOIN Session s ON s.course = c
+            LEFT JOIN s.newsRef nr
+            WHERE
+                lower(c.title) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(c.description) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(t.name) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(cst.tag) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(nr.headline) LIKE lower(concat('%', :keyword, '%'))
+            ORDER BY c.createdAt DESC
+            """,
+        countQuery = """
+            SELECT COUNT(DISTINCT c)
+            FROM Course c
+            LEFT JOIN c.topic t
+            LEFT JOIN CourseSubTag cst ON cst.course = c
+            LEFT JOIN Session s ON s.course = c
+            LEFT JOIN s.newsRef nr
+            WHERE
+                lower(c.title) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(c.description) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(t.name) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(cst.tag) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(nr.headline) LIKE lower(concat('%', :keyword, '%'))
+            """
+    )
+    Page<Course> searchByKeywordOrderByCreatedAtDesc(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query(
+        value = """
+            SELECT DISTINCT c
+            FROM Course c
+            LEFT JOIN c.topic t
+            LEFT JOIN CourseSubTag cst ON cst.course = c
+            LEFT JOIN Session s ON s.course = c
+            LEFT JOIN s.newsRef nr
+            WHERE
+                lower(c.title) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(c.description) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(t.name) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(cst.tag) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(nr.headline) LIKE lower(concat('%', :keyword, '%'))
+            ORDER BY c.viewCount DESC
+            """,
+        countQuery = """
+            SELECT COUNT(DISTINCT c)
+            FROM Course c
+            LEFT JOIN c.topic t
+            LEFT JOIN CourseSubTag cst ON cst.course = c
+            LEFT JOIN Session s ON s.course = c
+            LEFT JOIN s.newsRef nr
+            WHERE
+                lower(c.title) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(c.description) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(t.name) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(cst.tag) LIKE lower(concat('%', :keyword, '%'))
+                OR lower(nr.headline) LIKE lower(concat('%', :keyword, '%'))
+            """
+    )
+    Page<Course> searchByKeywordOrderByViewCountDesc(@Param("keyword") String keyword, Pageable pageable);
 }
