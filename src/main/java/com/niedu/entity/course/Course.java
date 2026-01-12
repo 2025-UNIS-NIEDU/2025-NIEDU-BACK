@@ -22,7 +22,7 @@ public class Course {
     @Column(nullable = false)
     private String title;
 
-    @Column(name = "short_description", length = 200)
+    @Column(name = "short_description", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "thumbnail_url", length = 2048)
