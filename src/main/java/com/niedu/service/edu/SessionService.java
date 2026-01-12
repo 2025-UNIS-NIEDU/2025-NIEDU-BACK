@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -120,6 +121,7 @@ public class SessionService {
 
         // ---------- [이전에 학습한 적 있음] ----------
         sessionLog.setStartTime(LocalDateTime.now());
+        sessionLog.setEndTime(null);
         StudiedSession savedStudiedSession = studiedSessionRepository.save(sessionLog);
 
         // StudiedStep 불러오기
@@ -170,6 +172,31 @@ public class SessionService {
         if (studiedSession == null) {
             throw new RuntimeException("StudiedSession not found for user " + user.getId() + " and session " + sessionId);
         }
+        updateProgress(user, sessionId, studiedSession);
+        updateStudiedTimeIfNeeded(studiedSession);
+        studiedSessionRepository.save(studiedSession);
+    }
+
+    public SessionSummaryResponse summarizeSession(User user, Long sessionId) {
+        // 1. 학습 시간/진행률 업데이트
+        StudiedSession studiedSession = studiedSessionRepository.findByUserAndSession_Id(user, sessionId);
+        if (studiedSession == null) {
+            throw new RuntimeException("StudiedSession not found for user " + user.getId() + " and session " + sessionId);
+        }
+        updateProgress(user, sessionId, studiedSession);
+        Duration learningTime = updateStudiedTimeIfNeeded(studiedSession);
+        studiedSession.setStatus(SessionStatus.COMPLETED);
+        studiedSessionRepository.save(studiedSession);
+
+        // 2. 출석 반영 후 streak 조회
+        attendanceService.recordAttendance(user, LocalDate.now());
+        int streak = attendanceService.calculateStreak(user.getId());
+
+        // 3. 리턴
+        return new SessionSummaryResponse(streak, learningTime);
+    }
+
+    private void updateProgress(User user, Long sessionId, StudiedSession studiedSession) {
         List<StudiedStep> studiedSteps = studiedStepRepository.findAllByUser_IdAndStep_Session_Id(user.getId(), sessionId);
         long completedCount = studiedSteps.stream()
                 .filter(StudiedStep::getIsCompleted)
@@ -177,24 +204,38 @@ public class SessionService {
 
         float progress = 0f;
         if (!studiedSteps.isEmpty()) {
-            progress = ((float) completedCount / studiedSteps.size()) * 100; // % 단위
+            progress = ((float) completedCount / studiedSteps.size()) * 100f; // % 단위
         }
 
         // 소수점 한 자리까지만 유지 (nn.n)
         float roundedProgress = Math.round(progress * 10f) / 10f;
-
-        // 2. StudiedSession 진행률 업데이트
         studiedSession.setProgress(roundedProgress);
-        studiedSessionRepository.save(studiedSession);
     }
 
-    public SessionSummaryResponse summarizeSession(User user, Long sessionId) {
-        // 1. streak 조회
-        int streak = attendanceService.calculateStreak(user.getId());
-        // 2. learningTime 조회
-        StudiedSession studiedSession = studiedSessionRepository.findByUserAndSession_Id(user, sessionId);
-        Duration learningTime = studiedSession.getStudiedTime();
-        // 3. 리턴
-        return new SessionSummaryResponse(streak, learningTime);
+    private Duration updateStudiedTimeIfNeeded(StudiedSession studiedSession) {
+        LocalDateTime startTime = studiedSession.getStartTime();
+        LocalDateTime endTime = studiedSession.getEndTime();
+        Duration total = studiedSession.getStudiedTime();
+        if (total == null) {
+            total = Duration.ZERO;
+        }
+
+        if (startTime == null) {
+            return total;
+        }
+        if (endTime != null && !endTime.isBefore(startTime)) {
+            return total;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        Duration added = Duration.between(startTime, now);
+        if (added.isNegative()) {
+            added = Duration.ZERO;
+        }
+
+        studiedSession.setEndTime(now);
+        Duration updated = total.plus(added);
+        studiedSession.setStudiedTime(updated);
+        return updated;
     }
 }

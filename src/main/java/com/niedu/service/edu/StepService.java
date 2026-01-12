@@ -45,6 +45,7 @@ public class StepService {
         List<UserAnswer> userAnswers = userAnswerMapperService.toEntities(studiedStep, userAnswer);
         // 2. StudiedStep 업데이트
         studiedStep.setIsCompleted(true);
+        studiedStepRepository.save(studiedStep);
         // 3. 리턴
         return userAnswerMapperService.toResponse(studiedStep);
     }

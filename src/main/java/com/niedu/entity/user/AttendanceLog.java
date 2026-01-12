@@ -23,4 +23,9 @@ public class AttendanceLog {
 
     @Column(name = "attended_date", nullable = false)
     private LocalDate attendedDate;
+
+    public AttendanceLog(User user, LocalDate attendedDate) {
+        this.user = user;
+        this.attendedDate = attendedDate;
+    }
 }
