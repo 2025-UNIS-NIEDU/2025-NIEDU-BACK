@@ -20,6 +20,7 @@ import com.niedu.repository.learning_record.StudiedStepRepository;
 import com.niedu.service.edu.user_answer.UserAnswerMapperService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,18 +38,27 @@ public class StepService {
     private final AIErrorReportRepository aiErrorReportRepository;
     private final ObjectMapper objectMapper;
 
+    @Transactional
     public AnswerResponse submitStepAnswer(User user, Long stepId, StepAnswerRequest request) {
         // 1. UserAnswer entity 저장
         StudiedStep studiedStep = studiedStepRepository.findByUserAndStep_Id(user, stepId);
+        if (studiedStep == null) {
+            throw new IllegalArgumentException("StudiedStep not found for user and stepId: " + stepId);
+        }
+
         StepType stepType = resolveStepType(studiedStep, request);
         AnswerResponse userAnswer = mapUserAnswer(stepType, request.userAnswer());
         List<UserAnswer> userAnswers = userAnswerMapperService.toEntities(studiedStep, userAnswer);
-        // 2. StudiedStep 업데이트
+
+        // 2. StudiedStep 업데이트 (진행률 반영을 위해 완료 처리 및 저장)
         studiedStep.setIsCompleted(true);
+        studiedStepRepository.save(studiedStep);
+
         // 3. 리턴
         return userAnswerMapperService.toResponse(studiedStep);
     }
 
+    @Transactional
     public SharedResponse shareMyAnswer(User user, Long stepId, ShareAnswerRequest request) {
         StudiedStep studiedStep = studiedStepRepository.findByUserAndStep_Id(user, stepId);
         SharedResponse sharedResponse = new SharedResponse(
@@ -82,6 +92,7 @@ public class StepService {
         return response;
     }
 
+    @Transactional
     public AIErrorReport reportErrorInFeedback(User user, Long stepId, Long contentId) {
         StudiedStep studiedStep = studiedStepRepository.findByUserAndStep_Id(user, stepId);
         AIErrorReport aiErrorReport = new AIErrorReport(
