@@ -39,7 +39,6 @@ public class HomeService {
 
         return newsRefs.stream()
                 .map(newsRef -> {
-                    // 세션을 거쳐 CourseId를 가져옴
                     Long courseId = sessionRepository.findByNewsRef_Id(newsRef.getId())
                             .map(session -> session.getCourse().getId())
                             .orElse(null);
@@ -60,19 +59,34 @@ public class HomeService {
 
         if ("recent".equalsIgnoreCase(type)) {
             Page<StudiedCourse> studiedCourses = studiedCourseRepository.findByUserOrderByUpdatedAtDesc(user, pageable);
-
-            // Page 객체에서 데이터를 꺼내 리스트로 변환
             return studiedCourses.getContent().stream()
                     .map(sc -> HomeCourseRecord.fromEntity(sc.getCourse()))
                     .toList();
         } else if ("saved".equalsIgnoreCase(type)) {
             Page<Course> courses = savedCourseRepository.findByUserOrderByCourse_CreatedAtDesc(user, pageable);
-
             return courses.getContent().stream()
                     .map(HomeCourseRecord::fromEntity)
                     .toList();
         } else {
             throw new IllegalArgumentException("타입 파라미터 오류: " + type);
+        }
+    }
+
+
+    @Transactional
+    public void startCourse(User user, Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("코스를 찾을 수 없습니다."));
+
+        StudiedCourse studiedCourse = studiedCourseRepository.findByUserAndCourse_Id(user, courseId);
+
+        if (studiedCourse == null) {
+            studiedCourse = StudiedCourse.builder()
+                    .user(user)
+                    .course(course)
+                    .progress(0.0f)
+                    .build();
+            studiedCourseRepository.save(studiedCourse);
         }
     }
 }
