@@ -4,6 +4,8 @@ import com.niedu.entity.course.Session;
 import com.niedu.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class StudiedSession {
 
     @Id
@@ -42,6 +45,10 @@ public class StudiedSession {
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Transient
     public Duration getCurrentDuration() {

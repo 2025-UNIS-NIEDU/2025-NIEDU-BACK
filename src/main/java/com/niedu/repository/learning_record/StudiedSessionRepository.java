@@ -13,6 +13,6 @@ import java.util.List;
 public interface StudiedSessionRepository extends JpaRepository<StudiedSession, Long> {
 
     StudiedSession findByUserAndSession_Id(User user, Long sessionId);
-
+    List<StudiedSession> findAllByUserAndSession_Course_Id(User user, Long courseId);
     List<StudiedSession> findByUserAndStartTimeBetween(User user, LocalDateTime start, LocalDateTime end);
 }
