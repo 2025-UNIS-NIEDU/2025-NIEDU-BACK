@@ -1,12 +1,11 @@
 package com.niedu.dto.home;
 
 import com.niedu.entity.content.NewsRef;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "홈 화면 뉴스 데이터 Record")
 public record HomeNewsRecord(
-        @Schema(description= "ID")
+        @Schema(description= "ID (Course ID)")
         Long id,
         @Schema(description = "썸네일 URL")
         String thumbnailUrl,
@@ -17,6 +16,11 @@ public record HomeNewsRecord(
         @Schema(description = "토픽")
         String topic
 ) {
+
+    public HomeNewsRecord(Long id, String thumbnailUrl, String title, String publisher) {
+        this(id, thumbnailUrl, title, publisher, null);
+    }
+
     public static HomeNewsRecord fromEntity(NewsRef newsRef) {
         return new HomeNewsRecord(
                 newsRef.getId(),
