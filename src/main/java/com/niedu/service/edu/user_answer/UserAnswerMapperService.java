@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,9 +52,24 @@ public class UserAnswerMapperService {
             result = existing;
         } else {
             result = strategy.toEntities(studiedStep, contents, userAnswerRequest);
-            userAnswerRepository.saveAll(result);
         }
 
+        List<IsCorrectResponse> isCorrectResponses = strategy.checkIsCorrect(contents, userAnswerRequest);
+        Map<Long, Boolean> isCorrectMap = (isCorrectResponses == null) ? Map.of() :
+                isCorrectResponses.stream()
+                        .filter(resp -> resp.contentId() != null)
+                        .collect(Collectors.toMap(IsCorrectResponse::contentId, IsCorrectResponse::isCorrect, (a, b) -> a));
+
+        result.forEach(answer -> {
+            Content content = answer.getContent();
+            if (content == null) return;
+            Boolean isCorrect = isCorrectMap.get(content.getId());
+            if (isCorrect != null) {
+                answer.setIsCorrect(isCorrect);
+            }
+        });
+
+        userAnswerRepository.saveAll(result);
         return result;
     }
 

@@ -2,6 +2,8 @@ package com.niedu.service.edu;
 
 import com.niedu.dto.course.*;
 import com.niedu.entity.content.Content;
+import com.niedu.entity.course.Level;
+import com.niedu.entity.course.Course;
 import com.niedu.entity.course.Session;
 import com.niedu.entity.course.Step;
 import com.niedu.entity.learning_record.SessionStatus;
@@ -12,15 +14,14 @@ import com.niedu.entity.user.User;
 import com.niedu.repository.content.ContentRepository;
 import com.niedu.repository.course.SessionRepository;
 import com.niedu.repository.course.StepRepository;
-import com.niedu.repository.learning_record.StudiedCourseRepository;
 import com.niedu.repository.learning_record.StudiedSessionRepository;
 import com.niedu.repository.learning_record.StudiedStepRepository;
+import com.niedu.repository.learning_record.StudiedCourseRepository;
 import com.niedu.service.edu.content.StepMapperService;
 import com.niedu.service.edu.user_answer.UserAnswerMapperService;
 import com.niedu.service.user.AttendanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -39,7 +40,7 @@ public class SessionService {
     private final StudiedSessionRepository studiedSessionRepository;
     private final StepRepository stepRepository;
     private final StudiedStepRepository studiedStepRepository;
-    private final StudiedCourseRepository studiedCourseRepository; // 주입 추가
+    private final StudiedCourseRepository studiedCourseRepository;
 
     public ArrayList<SessionListResponse> getSessions(Long courseId) {
         List<Session> sessions = sessionRepository.findAllByCourse_Id(courseId);
@@ -55,12 +56,13 @@ public class SessionService {
         return responses;
     }
 
-    @Transactional
     public SessionStartResponse startSession(User user, Long sessionId, LevelRequest request) {
 
         // 0. 세션 존재 확인
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found: " + sessionId));
+
+        Level selectedLevel = parseLevel(request);
 
         // 학습 이력 존재 여부 확인
         StudiedSession sessionLog = studiedSessionRepository.findByUserAndSession_Id(user, sessionId);
@@ -76,9 +78,10 @@ public class SessionService {
                     .build();
 
             StudiedSession savedStudiedSession = studiedSessionRepository.save(sessionLog);
+            upsertStudiedCourse(user, session.getCourse());
 
             // Step 목록 조회
-            List<Step> steps = stepRepository.findAllBySession_Id(sessionId);
+            List<Step> steps = stepRepository.findAllBySession_IdOrderByStepOrderAsc(sessionId);
             if (steps == null) {
                 steps = List.of();
             }
@@ -96,7 +99,8 @@ public class SessionService {
 
             // StepListResponse 구성
             ArrayList<StepListResponse> stepListResponses = new ArrayList<>();
-            for (StudiedStep studiedStep : savedStudiedSteps) {
+            List<StudiedStep> filteredStudiedSteps = filterByLevel(savedStudiedSteps, selectedLevel);
+            for (StudiedStep studiedStep : filteredStudiedSteps) {
                 Step step = studiedStep.getStep();
                 if (step == null) continue;
 
@@ -109,12 +113,12 @@ public class SessionService {
                         studiedStep.getIsCompleted(),
                         step.getType(),
                         stepMapperService.toResponse(step, contents),
-                        userAnswerMapperService.toResponse(studiedStep),
-                        userAnswerMapperService.checkIsCorrect(studiedStep)
+                        userAnswerMapperService.toResponse(studiedStep), // null 가능
+                        userAnswerMapperService.checkIsCorrect(studiedStep) // null 가능
                 ));
             }
 
-            Long firstStudiedStepId = (savedStudiedSteps.isEmpty()) ? null : savedStudiedSteps.get(0).getId();
+            Long firstStudiedStepId = findFirstStudiedStepId(filteredStudiedSteps);
 
             return new SessionStartResponse(
                     firstStudiedStepId,
@@ -126,6 +130,7 @@ public class SessionService {
         // ---------- [이전에 학습한 적 있음] ----------
         sessionLog.setStartTime(LocalDateTime.now());
         StudiedSession savedStudiedSession = studiedSessionRepository.save(sessionLog);
+        upsertStudiedCourse(user, session.getCourse());
 
         // StudiedStep 불러오기
         List<StudiedStep> studiedSteps =
@@ -134,8 +139,8 @@ public class SessionService {
         if (studiedSteps == null) studiedSteps = List.of();
 
         ArrayList<StepListResponse> stepListResponses = new ArrayList<>();
-
-        for (StudiedStep studiedStep : studiedSteps) {
+        List<StudiedStep> filteredStudiedSteps = filterByLevel(studiedSteps, selectedLevel);
+        for (StudiedStep studiedStep : filteredStudiedSteps) {
             Step step = studiedStep.getStep();
             if (step == null) continue;
 
@@ -153,14 +158,7 @@ public class SessionService {
             ));
         }
 
-        // 첫 미완료 Step 찾기
-        StudiedStep firstStep = studiedStepRepository
-                .findFirstByUserAndStep_Session_IdAndIsCompletedFalseOrderByStep_IdAsc(user, sessionId)
-                .orElseGet(() ->
-                        studiedStepRepository.findFirstByUserAndStep_Session_Id(user, sessionId)
-                );
-
-        Long firstStudiedStepId = (firstStep != null) ? firstStep.getId() : null;
+        Long firstStudiedStepId = findFirstStudiedStepId(filteredStudiedSteps);
 
         return new SessionStartResponse(
                 firstStudiedStepId,
@@ -169,7 +167,100 @@ public class SessionService {
         );
     }
 
-    @Transactional
+    private Level parseLevel(LevelRequest request) {
+        if (request == null || request.level() == null || request.level().isBlank()) {
+            return null;
+        }
+        try {
+            return Level.valueOf(request.level().trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new RuntimeException("Invalid level: " + request.level());
+        }
+    }
+
+    private List<StudiedStep> filterByLevel(List<StudiedStep> studiedSteps, Level selectedLevel) {
+        if (selectedLevel == null) {
+            return sortByStepOrder(studiedSteps);
+        }
+        return studiedSteps.stream()
+                .filter(studiedStep -> {
+                    Step step = studiedStep.getStep();
+                    return step != null && selectedLevel.equals(step.getLevel());
+                })
+                .sorted(this::compareByStepOrderThenId)
+                .toList();
+    }
+
+    private Long findFirstStudiedStepId(List<StudiedStep> studiedSteps) {
+        if (studiedSteps == null || studiedSteps.isEmpty()) {
+            return null;
+        }
+        return studiedSteps.stream()
+                .sorted((a, b) -> {
+                    Integer aOrder = a.getStep() != null ? a.getStep().getStepOrder() : null;
+                    Integer bOrder = b.getStep() != null ? b.getStep().getStepOrder() : null;
+                    if (aOrder == null && bOrder == null) return 0;
+                    if (aOrder == null) return 1;
+                    if (bOrder == null) return -1;
+                    int orderCompare = aOrder.compareTo(bOrder);
+                    if (orderCompare != 0) return orderCompare;
+                    Long aId = a.getStep() != null ? a.getStep().getId() : null;
+                    Long bId = b.getStep() != null ? b.getStep().getId() : null;
+                    if (aId == null && bId == null) return 0;
+                    if (aId == null) return 1;
+                    if (bId == null) return -1;
+                    return aId.compareTo(bId);
+                })
+                .filter(studiedStep -> Boolean.FALSE.equals(studiedStep.getIsCompleted()))
+                .map(studiedStep -> studiedStep.getStep() != null ? studiedStep.getStep().getId() : null)
+                .findFirst()
+                .or(() -> studiedSteps.stream()
+                        .sorted((a, b) -> {
+                            Integer aOrder = a.getStep() != null ? a.getStep().getStepOrder() : null;
+                            Integer bOrder = b.getStep() != null ? b.getStep().getStepOrder() : null;
+                            if (aOrder == null && bOrder == null) return 0;
+                            if (aOrder == null) return 1;
+                            if (bOrder == null) return -1;
+                            int orderCompare = aOrder.compareTo(bOrder);
+                            if (orderCompare != 0) return orderCompare;
+                            Long aId = a.getStep() != null ? a.getStep().getId() : null;
+                            Long bId = b.getStep() != null ? b.getStep().getId() : null;
+                            if (aId == null && bId == null) return 0;
+                            if (aId == null) return 1;
+                            if (bId == null) return -1;
+                            return aId.compareTo(bId);
+                        })
+                        .map(studiedStep -> studiedStep.getStep() != null ? studiedStep.getStep().getId() : null)
+                        .findFirst()
+                )
+                .orElse(null);
+    }
+
+    private List<StudiedStep> sortByStepOrder(List<StudiedStep> studiedSteps) {
+        if (studiedSteps == null) {
+            return List.of();
+        }
+        return studiedSteps.stream()
+                .sorted(this::compareByStepOrderThenId)
+                .toList();
+    }
+
+    private int compareByStepOrderThenId(StudiedStep a, StudiedStep b) {
+        Integer aOrder = a.getStep() != null ? a.getStep().getStepOrder() : null;
+        Integer bOrder = b.getStep() != null ? b.getStep().getStepOrder() : null;
+        if (aOrder == null && bOrder == null) return 0;
+        if (aOrder == null) return 1;
+        if (bOrder == null) return -1;
+        int orderCompare = aOrder.compareTo(bOrder);
+        if (orderCompare != 0) return orderCompare;
+        Long aId = a.getStep() != null ? a.getStep().getId() : null;
+        Long bId = b.getStep() != null ? b.getStep().getId() : null;
+        if (aId == null && bId == null) return 0;
+        if (aId == null) return 1;
+        if (bId == null) return -1;
+        return aId.compareTo(bId);
+    }
+
     public void quitSession(User user, Long sessionId) {
         // 1. 진행률 확인
         StudiedSession studiedSession = studiedSessionRepository.findByUserAndSession_Id(user, sessionId);
@@ -192,37 +283,37 @@ public class SessionService {
         // 2. StudiedSession 진행률 업데이트
         studiedSession.setProgress(roundedProgress);
         studiedSessionRepository.save(studiedSession);
-
-        // 3. 상위 코스(StudiedCourse) 진행률 연쇄 업데이트 로직 추가
-        updateCourseProgress(user, studiedSession.getSession().getCourse());
+        upsertStudiedCourse(user, studiedSession.getSession().getCourse());
     }
 
-    // 코스 진행률 계산 및 업데이트 메서드
-    private void updateCourseProgress(User user, com.niedu.entity.course.Course course) {
-        StudiedCourse studiedCourse = studiedCourseRepository.findByUserAndCourse_Id(user, course.getId());
+    private void upsertStudiedCourse(User user, Course course) {
+        if (course == null) {
+            return;
+        }
 
-        // 기록이 없으면 새로 생성
+        long totalSessions = sessionRepository.countByCourse_Id(course.getId());
+        float progress = 0f;
+        if (totalSessions > 0) {
+            List<StudiedSession> studiedSessions =
+                    studiedSessionRepository.findAllByUserAndSession_Course_Id(user, course.getId());
+            float sumProgress = studiedSessions.stream()
+                    .map(StudiedSession::getProgress)
+                    .filter(p -> p != null)
+                    .reduce(0f, Float::sum);
+            progress = sumProgress / totalSessions;
+        }
+
+        StudiedCourse studiedCourse = studiedCourseRepository.findByUserAndCourse_Id(user, course.getId());
         if (studiedCourse == null) {
             studiedCourse = StudiedCourse.builder()
                     .user(user)
                     .course(course)
-                    .progress(0f)
+                    .progress(progress)
                     .build();
+        } else {
+            studiedCourse.setProgress(progress);
         }
 
-        List<StudiedSession> studiedSessions = studiedSessionRepository.findAllByUserAndSession_Course_Id(user, course.getId());
-        long totalSessionCount = sessionRepository.countByCourse_Id(course.getId());
-
-        if (totalSessionCount > 0) {
-            float sumProgress = 0f;
-            for (StudiedSession ss : studiedSessions) {
-                sumProgress += ss.getProgress();
-            }
-            float courseProgress = sumProgress / totalSessionCount;
-            studiedCourse.setProgress(Math.round(courseProgress * 10f) / 10f);
-        }
-
-        // save를 호출하면 @LastModifiedDate에 의해 updatedAt이 갱신되어 홈 화면 상단에 노출됨
         studiedCourseRepository.save(studiedCourse);
     }
 
@@ -231,7 +322,7 @@ public class SessionService {
         int streak = attendanceService.calculateStreak(user.getId());
         // 2. learningTime 조회
         StudiedSession studiedSession = studiedSessionRepository.findByUserAndSession_Id(user, sessionId);
-        Duration learningTime = (studiedSession != null) ? studiedSession.getStudiedTime() : Duration.ZERO;
+        Duration learningTime = studiedSession.getStudiedTime();
         // 3. 리턴
         return new SessionSummaryResponse(streak, learningTime);
     }

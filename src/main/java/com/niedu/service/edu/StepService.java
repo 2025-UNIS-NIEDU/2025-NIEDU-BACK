@@ -1,11 +1,24 @@
 package com.niedu.service.edu;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.niedu.dto.course.*;
+import com.niedu.dto.course.FeedbackAnswerRequest;
+import com.niedu.dto.course.FeedbackAnswerResponse;
+import com.niedu.dto.course.ShareAnswerRequest;
+import com.niedu.dto.course.StepAnswerRequest;
 import com.niedu.dto.course.user_answer.AnswerResponse;
+import com.niedu.dto.course.user_answer.EmptyAnswerResponse;
 import com.niedu.dto.course.user_answer.SentenceCompletionAnswerListResponse;
+import com.niedu.dto.course.user_answer.SentenceCompletionAnswerResponse;
 import com.niedu.dto.course.user_answer.SimpleAnswerListResponse;
+import com.niedu.dto.course.user_answer.SimpleAnswerResponse;
 import com.niedu.dto.course.user_answer.SummaryReadingAnswerResponse;
 import com.niedu.entity.admin.AIErrorReport;
 import com.niedu.entity.course.StepType;
@@ -18,14 +31,8 @@ import com.niedu.repository.content.ContentRepository;
 import com.niedu.repository.learning_record.SharedResponseRepository;
 import com.niedu.repository.learning_record.StudiedStepRepository;
 import com.niedu.service.edu.user_answer.UserAnswerMapperService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -38,27 +45,29 @@ public class StepService {
     private final AIErrorReportRepository aiErrorReportRepository;
     private final ObjectMapper objectMapper;
 
-    @Transactional
     public AnswerResponse submitStepAnswer(User user, Long stepId, StepAnswerRequest request) {
         // 1. UserAnswer entity 저장
         StudiedStep studiedStep = studiedStepRepository.findByUserAndStep_Id(user, stepId);
-        if (studiedStep == null) {
-            throw new IllegalArgumentException("StudiedStep not found for user and stepId: " + stepId);
+        StepType stepType = resolveStepType(studiedStep, request);
+
+        if (request == null || request.userAnswer() == null || request.userAnswer().isNull()) {
+            if (isNoAnswerStep(stepType)) {
+                studiedStep.setIsCompleted(true);
+                studiedStepRepository.save(studiedStep);
+                return new EmptyAnswerResponse();
+            }
+            throw new IllegalArgumentException("userAnswer is required");
         }
 
-        StepType stepType = resolveStepType(studiedStep, request);
         AnswerResponse userAnswer = mapUserAnswer(stepType, request.userAnswer());
         List<UserAnswer> userAnswers = userAnswerMapperService.toEntities(studiedStep, userAnswer);
-
-        // 2. StudiedStep 업데이트 (진행률 반영을 위해 완료 처리 및 저장)
+        // 2. StudiedStep 업데이트
         studiedStep.setIsCompleted(true);
         studiedStepRepository.save(studiedStep);
-
         // 3. 리턴
         return userAnswerMapperService.toResponse(studiedStep);
     }
 
-    @Transactional
     public SharedResponse shareMyAnswer(User user, Long stepId, ShareAnswerRequest request) {
         StudiedStep studiedStep = studiedStepRepository.findByUserAndStep_Id(user, stepId);
         SharedResponse sharedResponse = new SharedResponse(
@@ -92,7 +101,6 @@ public class StepService {
         return response;
     }
 
-    @Transactional
     public AIErrorReport reportErrorInFeedback(User user, Long stepId, Long contentId) {
         StudiedStep studiedStep = studiedStepRepository.findByUserAndStep_Id(user, stepId);
         AIErrorReport aiErrorReport = new AIErrorReport(
@@ -104,10 +112,11 @@ public class StepService {
     }
 
     private StepType resolveStepType(StudiedStep studiedStep, StepAnswerRequest request) {
-        if (request != null && request.contentType() != null) {
-            return request.contentType();
+        StepType actualType = studiedStep.getStep().getType();
+        if (request != null && request.contentType() != null && !request.contentType().equals(actualType)) {
+            throw new IllegalArgumentException("contentType mismatch: expected " + actualType + " but got " + request.contentType());
         }
-        return studiedStep.getStep().getType();
+        return actualType;
     }
 
     private AnswerResponse mapUserAnswer(StepType stepType, JsonNode userAnswerNode) {
@@ -116,13 +125,36 @@ public class StepService {
         }
         return switch (stepType) {
             case OX_QUIZ, MULTIPLE_CHOICE, SHORT_ANSWER ->
-                    objectMapper.convertValue(userAnswerNode, SimpleAnswerListResponse.class);
+                    mapSimpleAnswer(userAnswerNode);
             case SENTENCE_COMPLETION ->
-                    objectMapper.convertValue(userAnswerNode, SentenceCompletionAnswerListResponse.class);
+                    mapSentenceCompletionAnswer(userAnswerNode);
             case SUMMARY_READING ->
                     objectMapper.convertValue(userAnswerNode, SummaryReadingAnswerResponse.class);
             default ->
                     throw new IllegalArgumentException("Unsupported step type for answer: " + stepType);
         };
+    }
+
+    private boolean isNoAnswerStep(StepType stepType) {
+        return stepType == StepType.TERM_LEARNING
+                || stepType == StepType.CURRENT_AFFAIRS
+                || stepType == StepType.ARTICLE_READING
+                || stepType == StepType.SESSION_REFLECTION;
+    }
+
+    private AnswerResponse mapSimpleAnswer(JsonNode userAnswerNode) {
+        if (userAnswerNode.has("answers")) {
+            return objectMapper.convertValue(userAnswerNode, SimpleAnswerListResponse.class);
+        }
+        SimpleAnswerResponse single = objectMapper.convertValue(userAnswerNode, SimpleAnswerResponse.class);
+        return new SimpleAnswerListResponse(List.of(single));
+    }
+
+    private AnswerResponse mapSentenceCompletionAnswer(JsonNode userAnswerNode) {
+        if (userAnswerNode.has("answers")) {
+            return objectMapper.convertValue(userAnswerNode, SentenceCompletionAnswerListResponse.class);
+        }
+        SentenceCompletionAnswerResponse single = objectMapper.convertValue(userAnswerNode, SentenceCompletionAnswerResponse.class);
+        return new SentenceCompletionAnswerListResponse(List.of(single));
     }
 }

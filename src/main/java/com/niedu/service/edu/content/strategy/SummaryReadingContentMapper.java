@@ -30,6 +30,7 @@ public class SummaryReadingContentMapper implements ContentMapperStrategy {
 
         if (content instanceof SummaryReading summaryReading)
             return new SummaryReadingContentResponse(
+                    summaryReading.getId(),
                     summaryReading.getSummary(),
                     summaryReading.getKeywords()
             );

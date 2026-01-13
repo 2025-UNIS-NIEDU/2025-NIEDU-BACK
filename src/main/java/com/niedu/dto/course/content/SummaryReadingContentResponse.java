@@ -5,11 +5,13 @@ import com.niedu.entity.content.SummaryReading;
 import java.util.List;
 
 public record SummaryReadingContentResponse (
+        Long contentId,
         String summary,
         List<KeywordContent> keywords
 ) implements ContentResponse {
     public static SummaryReadingContentResponse fromEntity(SummaryReading entity) {
         return new SummaryReadingContentResponse(
+                entity.getId(),
                 entity.getSummary(),
                 entity.getKeywords()
         );
