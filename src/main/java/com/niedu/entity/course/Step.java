@@ -30,4 +30,9 @@ public class Step {
     @Enumerated(EnumType.STRING)
     @Column(name = "step_type", nullable = false)
     private StepType type;
+
+    // 난이도 레벨 (N/I/E)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "level", nullable = false)
+    private Level level;
 }

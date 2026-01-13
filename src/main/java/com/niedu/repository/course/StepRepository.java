@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface StepRepository extends JpaRepository<Step, Long> {
     List<Step> findAllBySession_Id(Long sessionId);
+
+    List<Step> findAllBySession_IdOrderByStepOrderAsc(Long sessionId);
 }

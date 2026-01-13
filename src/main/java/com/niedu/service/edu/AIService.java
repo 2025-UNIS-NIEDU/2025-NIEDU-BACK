@@ -34,6 +34,7 @@ import com.niedu.entity.content.NewsRef;
 import com.niedu.entity.course.Course;
 import com.niedu.entity.course.CourseSubTag;
 import com.niedu.entity.course.CourseSubTopic;
+import com.niedu.entity.course.Level;
 import com.niedu.entity.course.Session;
 import com.niedu.entity.course.Step;
 import com.niedu.entity.topic.SubTopic;
@@ -286,16 +287,17 @@ public class AIService {
             }
 
             for (AIStepResponse stepResponse : steps) {
-                saveStepWithContents(session, stepResponse);
+                saveStepWithContents(session, quiz.level(), stepResponse);
             }
         }
     }
 
-    private void saveStepWithContents(Session session, AIStepResponse stepResponse) {
+    private void saveStepWithContents(Session session, Level level, AIStepResponse stepResponse) {
         Step step = stepRepository.save(Step.builder()
                 .session(session)
                 .stepOrder(stepResponse.stepOrder())
                 .type(stepResponse.contentType())
+                .level(level)
                 .build());
 
         // normalize 적용
