@@ -56,9 +56,9 @@ public class SearchService {
         Page<Course> courses;
 
         if ("recent".equalsIgnoreCase(sort)) {
-            courses = courseRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(keyword, pageable);
+            courses = courseRepository.searchByComplexCriteria(keyword, pageable);
         } else if ("popular".equalsIgnoreCase(sort)) {
-            courses = courseRepository.findByTitleContainingIgnoreCaseOrderByViewCountDesc(keyword, pageable);
+            courses = courseRepository.searchByComplexCriteriaOrderByPopular(keyword, pageable);
         } else {
             throw new IllegalArgumentException("Invalid sort parameter: " + sort);
         }
