@@ -2,11 +2,10 @@ package com.niedu.service.home;
 
 import com.niedu.dto.home.HomeCourseRecord;
 import com.niedu.dto.home.HomeNewsRecord;
-import com.niedu.entity.content.NewsRef;
 import com.niedu.entity.course.Course;
+import com.niedu.entity.course.Session;
 import com.niedu.entity.learning_record.StudiedCourse;
 import com.niedu.entity.user.User;
-import com.niedu.repository.content.NewsRefRepository;
 import com.niedu.repository.course.CourseRepository;
 import com.niedu.repository.course.SessionRepository;
 import com.niedu.repository.learning_record.SavedCourseRepository;
@@ -25,29 +24,27 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class HomeService {
 
-    private final NewsRefRepository newsRefRepository;
     private final CourseRepository courseRepository;
     private final SavedCourseRepository savedCourseRepository;
     private final StudiedCourseRepository studiedCourseRepository;
     private final SessionRepository sessionRepository;
 
     public List<HomeNewsRecord> getRandomNews(User user) {
-        List<NewsRef> newsRefs = newsRefRepository.findTwoRandomFromLatestDate();
+        List<Session> sessions = sessionRepository.findTwoRandomFromLatestNewsRefDate();
 
-        if (newsRefs == null || newsRefs.isEmpty())
-            throw new RuntimeException("최신 뉴스가 없습니다.");
+        if (sessions == null || sessions.isEmpty()) {
+            throw new RuntimeException("최신 세션이 없습니다.");
+        }
 
-        return newsRefs.stream()
-                .map(newsRef -> {
-                    Long courseId = sessionRepository.findByNewsRef_Id(newsRef.getId())
-                            .map(session -> session.getCourse().getId())
-                            .orElse(null);
+        return sessions.stream()
+                .map(session -> {
+                    Long courseId = session.getCourse().getId();
 
                     return new HomeNewsRecord(
                             courseId,
-                            newsRef.getThumbnailUrl(),
-                            newsRef.getHeadline(),
-                            newsRef.getPublisher()
+                            session.getNewsRef().getThumbnailUrl(),
+                            session.getNewsRef().getHeadline(),
+                            session.getNewsRef().getPublisher()
                     );
                 })
                 .toList();
