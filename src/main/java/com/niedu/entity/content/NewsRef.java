@@ -35,4 +35,7 @@ public class NewsRef {
 
     @Column(name = "source_url", length = 2048)
     private String sourceUrl;
+
+    @Column(name = "course_id")
+    private Long courseId;
 }
