@@ -6,7 +6,6 @@ import com.niedu.dto.course.user_answer.*;
 
 import com.niedu.entity.content.*;
 import com.niedu.entity.course.Level;
-import com.niedu.entity.course.Session;
 import com.niedu.entity.course.Step;
 import com.niedu.entity.course.StepType;
 import com.niedu.entity.learning_record.*;
@@ -51,12 +50,10 @@ public class MyPageService {
     private final UserAnswerRepository userAnswerRepository;
     private final ContentRepository contentRepository;
 
-
     public MyCalendarResponse getDateNavigator(User user) {
         LocalDate now = LocalDate.now();
         return getCalendar(user, now.getYear(), now.getMonthValue());
     }
-
 
     public MyCalendarResponse getCalendar(User user, Integer year, Integer month) {
         LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
@@ -64,24 +61,20 @@ public class MyPageService {
         LocalDateTime monthEnd = firstDayOfMonth.with(TemporalAdjusters.lastDayOfMonth()).atTime(LocalTime.MAX);
         int daysInMonth = firstDayOfMonth.lengthOfMonth();
 
-        // 1. 월간 학습 데이터를 한 번에 조회
         List<StudiedSession> sessions = studiedSessionRepository.findByUserAndStartTimeBetween(user, monthStart, monthEnd);
         List<SharedResponse> responses = sharedResponseRepository.findByUserAndCreatedAtBetween(user, monthStart, monthEnd);
 
-        // 2. 날짜별로 데이터 그룹핑
         Map<LocalDate, List<StudiedSession>> sessionsByDate = sessions.stream()
                 .collect(Collectors.groupingBy(s -> s.getStartTime().toLocalDate()));
         Map<LocalDate, List<SharedResponse>> responsesByDate = responses.stream()
                 .collect(Collectors.groupingBy(r -> r.getCreatedAt().toLocalDate()));
 
-        // 3. IntStream을 사용해 각 날짜별 DTO 생성
         List<MyCalendarResponse.DayDetail> days = IntStream.rangeClosed(1, daysInMonth)
                 .mapToObj(day -> {
                     LocalDate currentDate = firstDayOfMonth.withDayOfMonth(day);
                     List<StudiedSession> sessionsToday = sessionsByDate.getOrDefault(currentDate, Collections.emptyList());
                     List<SharedResponse> responsesToday = responsesByDate.getOrDefault(currentDate, Collections.emptyList());
 
-                    // 4. 헬퍼 메서드로 코스 정보 추출
                     List<MyCalendarCourseInfo> coursesForThisDay = extractCoursesForCalendar(sessionsToday, responsesToday);
                     return new MyCalendarResponse.DayDetail(currentDate.atStartOfDay(), coursesForThisDay);
                 })
@@ -90,9 +83,7 @@ public class MyPageService {
         return new MyCalendarResponse(year, month, days);
     }
 
-
     private List<MyCalendarCourseInfo> extractCoursesForCalendar(List<StudiedSession> sessions, List<SharedResponse> responses) {
-        // 1. 두 리스트를 하나의 스트림으로 병합
         Stream<MyCalendarCourseInfo> sessionCourses = sessions.stream()
                 .map(ss -> {
                     Topic topic = ss.getSession().getCourse().getTopic();
@@ -107,12 +98,10 @@ public class MyPageService {
                     return MyCalendarCourseInfo.fromTopic(topic.getName(), subTopicName);
                 });
 
-        // 2. 병합된 스트림에서 명세서 기준 3개만 DTO로 변환
         List<MyCalendarCourseInfo> combinedCourses = Stream.concat(sessionCourses, responseCourses)
-                .limit(3) // 3개까지 노출
+                .limit(3)
                 .toList();
 
-        // 3. +n 계산 (명세서 SET-ALL-03)
         long totalCount = (long) sessions.size() + (long) responses.size();
         if (totalCount > 3) {
             List<MyCalendarCourseInfo> mutableList = new ArrayList<>(combinedCourses);
@@ -123,25 +112,17 @@ public class MyPageService {
         return combinedCourses;
     }
 
-
     public List<ReviewNoteItemResponse> getReviewNotes(User user, LocalDate date) {
-        if (date == null) {
-            date = LocalDate.now();
-        }
+        if (date == null) date = LocalDate.now();
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
         Long userId = user.getId();
 
-        // 1. 틀린 퀴즈 목록 조회
-        List<UserAnswer> answers = userAnswerRepository
-                .findUserAnswersByDateRange(userId, startOfDay, endOfDay);
-        // 2. 세션 돌아보기 목록 조회
-        List<SharedResponse> responses = sharedResponseRepository
-                .findByUserAndCreatedAtBetween(user, startOfDay, endOfDay);
+        List<UserAnswer> answers = userAnswerRepository.findUserAnswersByDateRange(userId, startOfDay, endOfDay);
+        List<SharedResponse> responses = sharedResponseRepository.findByUserAndCreatedAtBetween(user, startOfDay, endOfDay);
 
         List<ReviewNoteItemResponse> reviewNotes = new ArrayList<>();
 
-        // 3-1. 틀린 퀴즈 목록 DTO로 변환
         for (UserAnswer answer : answers) {
             Content content = answer.getContent();
             StudiedStep studiedStep = answer.getStudiedStep();
@@ -154,7 +135,6 @@ public class MyPageService {
             AnswerResponse answerDto = null;
 
             try {
-
                 switch (stepType) {
                     case OX_QUIZ:
                         contentDto = OxQuizContentResponse.fromEntity((OxQuiz) content);
@@ -176,39 +156,26 @@ public class MyPageService {
                         contentDto = SummaryReadingContentResponse.fromEntity((SummaryReading) content);
                         answerDto = SummaryReadingAnswerResponse.fromEntity((SummaryReadingAnswer) answer);
                         break;
-                    default:
-                        log.warn("getReviewNotes: 처리되지 않은 퀴즈 contentType [{}]", stepType);
-                        break;
+                    default: break;
                 }
-            } catch (ClassCastException e) {
-                log.error("Content/Answer (ID: {})와 StepType ({})이 일치하지 않습니다.", content.getId(), stepType, e);
-                continue;
-            }
-
+            } catch (ClassCastException e) { continue; }
 
             LocalDateTime createdAt = null;
-            StudiedSession studiedSession = studiedSessionRepository
-                    .findByUserAndSession_Id(user, step.getSession().getId()); // [FIX]
+            StudiedSession studiedSession = studiedSessionRepository.findByUserAndSession_Id(user, step.getSession().getId());
+
             if (studiedSession != null) {
                 createdAt = studiedSession.getStartTime();
+            } else {
+                createdAt = startOfDay;
             }
 
-
-            if (contentDto != null && answerDto != null && createdAt != null) {
+            if (contentDto != null && answerDto != null) {
                 reviewNotes.add(new ReviewNoteItemResponse(
-                        topic.getName(),
-                        level,
-                        stepType,
-                        contentDto,
-                        answerDto,
-                        createdAt
+                        topic.getName(), level, stepType, contentDto, answerDto, createdAt
                 ));
-            } else if (createdAt == null) {
-                log.warn("StudiedSession을 찾을 수 없어 createdAt이 null입니다. User: {}, Session: {}", user.getId(), step.getSession().getId());
             }
         }
 
-        // 3-2. 세션  목록 DTO로 변환
         for (SharedResponse response : responses) {
             Step step = response.getStep();
             Topic topic = step.getSession().getCourse().getTopic();
@@ -222,159 +189,73 @@ public class MyPageService {
                 if (!contents.isEmpty() && contents.get(0) instanceof SessionReflection) {
                     reflectionQuestion = ((SessionReflection) contents.get(0)).getQuestion();
                 }
-            } catch (Exception e) {
-                log.error("SESSION_REFLECTION 질문을 찾는 중 오류 발생. Step ID: {}", step.getId(), e);
-            }
-
-            ContentResponse contentDto = new SessionReflectionContentResponse(reflectionQuestion);
-            AnswerResponse answerDto = SharedReflectionResponse.fromEntity(response);
+            } catch (Exception e) { }
 
             reviewNotes.add(new ReviewNoteItemResponse(
-                    topic.getName(),
-                    level,
-                    stepType,
-                    contentDto,
-                    answerDto,
-                    createdAt
+                    topic.getName(), level, stepType, new SessionReflectionContentResponse(reflectionQuestion),
+                    SharedReflectionResponse.fromEntity(response), createdAt
             ));
         }
 
-        // 4. 최종 정렬
         reviewNotes.sort(Comparator.comparing(ReviewNoteItemResponse::createdAt).reversed());
-
         return reviewNotes;
     }
 
-
     public MyTermListResponse getAllMyTerms(User user, String sort) {
         List<TermGroupRecord> groups = new ArrayList<>();
-
         if ("alphabetical".equals(sort)) {
             List<SavedTerm> savedTerms = savedTermRepository.findByUserOrderByTerm_NameAsc(user);
-
-            List<TermItemRecord> termItems = savedTerms.stream()
-                    .map(st -> new TermItemRecord(st.getTerm().getId(), st.getTerm().getName()))
-                    .toList();
-
-            Map<String, List<TermItemRecord>> groupedByInitial = termItems.stream()
-                    .collect(Collectors.groupingBy(
-                            item -> getInitial(item.term()),
-                            LinkedHashMap::new,
-                            Collectors.toList()
-                    ));
-
-            groups = groupedByInitial.entrySet().stream()
-                    .map(entry -> TermGroupRecord.forAlphabetical(entry.getKey(), entry.getValue()))
-                    .toList();
-
+            List<TermItemRecord> termItems = savedTerms.stream().map(st -> new TermItemRecord(st.getTerm().getId(), st.getTerm().getName())).toList();
+            Map<String, List<TermItemRecord>> groupedByInitial = termItems.stream().collect(Collectors.groupingBy(item -> getInitial(item.term()), LinkedHashMap::new, Collectors.toList()));
+            groups = groupedByInitial.entrySet().stream().map(entry -> TermGroupRecord.forAlphabetical(entry.getKey(), entry.getValue())).toList();
         } else {
             List<SavedTerm> savedTerms = savedTermRepository.findByUserOrderBySavedAtDesc(user);
-
             LocalDate today = LocalDate.now();
             LocalDate yesterday = today.minusDays(1);
             LocalDate sevenDaysAgo = today.minusDays(7);
-
-            List<TermItemRecord> todayTerms = new ArrayList<>();
-            List<TermItemRecord> yesterdayTerms = new ArrayList<>();
-            List<TermItemRecord> last7DaysTerms = new ArrayList<>();
-            List<TermItemRecord> otherTerms = new ArrayList<>();
-
+            List<TermItemRecord> todayTerms = new ArrayList<>(), yesterdayTerms = new ArrayList<>(), last7DaysTerms = new ArrayList<>(), otherTerms = new ArrayList<>();
             for (SavedTerm st : savedTerms) {
                 if (st.getSavedAt() == null) continue;
                 LocalDate savedDate = st.getSavedAt().toLocalDate();
                 TermItemRecord item = new TermItemRecord(st.getTerm().getId(), st.getTerm().getName());
-
-                if (savedDate.isEqual(today)) {
-                    todayTerms.add(item);
-                } else if (savedDate.isEqual(yesterday)) {
-                    yesterdayTerms.add(item);
-                } else if (savedDate.isAfter(sevenDaysAgo) && savedDate.isBefore(yesterday)) {
-                    last7DaysTerms.add(item);
-                } else {
-                    otherTerms.add(item);
-                }
+                if (savedDate.isEqual(today)) todayTerms.add(item);
+                else if (savedDate.isEqual(yesterday)) yesterdayTerms.add(item);
+                else if (savedDate.isAfter(sevenDaysAgo) && savedDate.isBefore(yesterday)) last7DaysTerms.add(item);
+                else otherTerms.add(item);
             }
-
-            if (!todayTerms.isEmpty()) {
-                groups.add(TermGroupRecord.forRecent("오늘", todayTerms));
-            }
-            if (!yesterdayTerms.isEmpty()) {
-                groups.add(TermGroupRecord.forRecent("어제", yesterdayTerms));
-            }
-            if (!last7DaysTerms.isEmpty()) {
-                groups.add(TermGroupRecord.forRecent("최근 7일", last7DaysTerms));
-            }
-            if (!otherTerms.isEmpty()) {
-                groups.add(TermGroupRecord.forRecent("그 외", otherTerms));
-            }
+            if (!todayTerms.isEmpty()) groups.add(TermGroupRecord.forRecent("오늘", todayTerms));
+            if (!yesterdayTerms.isEmpty()) groups.add(TermGroupRecord.forRecent("어제", yesterdayTerms));
+            if (!last7DaysTerms.isEmpty()) groups.add(TermGroupRecord.forRecent("최근 7일", last7DaysTerms));
+            if (!otherTerms.isEmpty()) groups.add(TermGroupRecord.forRecent("그 외", otherTerms));
         }
-
         return new MyTermListResponse(groups);
     }
 
-
     public TermContent getMyTermById(User user, Long termId) {
-        Term term = termRepository.findById(termId)
-                .orElseThrow(() -> new EntityNotFoundException("Term not found with id: " + termId));
-
-        if (!savedTermRepository.existsByUserAndTerm(user, term)) {
-            throw new EntityNotFoundException("사용자가 저장한 용어사전에서 해당 용어를 찾을 수 없습니다.");
-        }
+        Term term = termRepository.findById(termId).orElseThrow(() -> new EntityNotFoundException("Term not found with id: " + termId));
+        if (!savedTermRepository.existsByUserAndTerm(user, term)) throw new EntityNotFoundException("사용자가 저장한 용어사전에서 해당 용어를 찾을 수 없습니다.");
         return TermContent.fromEntity(term);
     }
 
-
     private Level convertStepTypeToLevel(StepType type) {
-        if (type == null) {
-            return Level.N;
-        }
-
+        if (type == null) return Level.N;
         switch (type) {
-            case OX_QUIZ:
-            case TERM_LEARNING:
-            case CURRENT_AFFAIRS:
-                return Level.N;
-
-            case MULTIPLE_CHOICE:
-            case ARTICLE_READING:
-            case SHORT_ANSWER:
-            case SUMMARY_READING:
-                return Level.I;
-
-            case SESSION_REFLECTION:
-            case SENTENCE_COMPLETION:
-                return Level.E;
-
-            default:
-                return Level.N;
+            case OX_QUIZ: case TERM_LEARNING: case CURRENT_AFFAIRS: return Level.N;
+            case MULTIPLE_CHOICE: case ARTICLE_READING: case SHORT_ANSWER: case SUMMARY_READING: return Level.I;
+            case SESSION_REFLECTION: case SENTENCE_COMPLETION: return Level.E;
+            default: return Level.N;
         }
     }
 
-
     private String getInitial(String text) {
-        if (text == null || text.isEmpty()) {
-            return "?";
-        }
+        if (text == null || text.isEmpty()) return "?";
         char firstChar = text.charAt(0);
-
-
         if (firstChar >= '가' && firstChar <= '힣') {
-            final char[] initials = {
-                    'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ',
-                    'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'
-            };
-
+            final char[] initials = {'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'};
             if (firstChar >= 'ㅅ' && firstChar < 'ㅇ') return "ㅅ";
-
-            int index = (firstChar - '가') / (21 * 28);
-            return String.valueOf(initials[index]);
+            return String.valueOf(initials[(firstChar - '가') / (21 * 28)]);
         }
-
-
-        if ((firstChar >= 'A' && firstChar <= 'Z') || (firstChar >= 'a' && firstChar <= 'z')) {
-            return String.valueOf(Character.toUpperCase(firstChar));
-        }
-
+        if ((firstChar >= 'A' && firstChar <= 'Z') || (firstChar >= 'a' && firstChar <= 'z')) return String.valueOf(Character.toUpperCase(firstChar));
         return "#";
     }
 }
